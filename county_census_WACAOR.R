@@ -439,3 +439,5 @@ for (i in c(3,6:8)) {
   econ_table <- paste0(econ_table,rowi)
 }
 cat(econ_table)
+
+
