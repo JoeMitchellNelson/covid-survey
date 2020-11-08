@@ -4,7 +4,7 @@ p_load(rpart,readr,dplyr,RCurl,rjson,lubridate,
        rvest,stringr,Hmisc,rattle,RColorBrewer,ddpcr,tidytext,tidyr,
        ggrepel,ggplot2,png,ggpubr,tidycensus,sf,plm,lmtest,stargazer,MASS,
        xtable,knitr,magick,purrr,ggthemes,gifski,extrafont,latex2exp,
-       cowplot,mapproj,patchwork,remotes,tictoc,Hmisc,english)
+       cowplot,mapproj,patchwork,remotes,tictoc,Hmisc,english,stringr)
 
 font_import(paths="C:/Users/Joe/AppData/Local/Microsoft/Windows/Fonts")
 loadfonts(device="win")
@@ -12,9 +12,6 @@ chosen_font <- "CMU Serif"
 
 vars <- load_variables(year=2018,dataset="acs5")
 
-##############################################
-######### CENSUS COUNTIES ####################
-##############################################
 
 census_data <- get_acs(geography = "state",
                        state=c("OR","WA","CA"),
@@ -101,3 +98,66 @@ indiv2[,which(!names(indiv2) %in% c("GEOID","NAME","total_pop","med_income"))] <
 indiv_data <- rbind(indiv_data,indiv2)
 
 write.csv(indiv_data,"~/covid-survey/state_data_for_trudy.csv")
+
+age_by_gend <- c()
+
+for (i in 3:49) {
+  k <- ifelse(str_length(i)<2,paste0(0,i),i)
+  temp <- paste0("B01001_0",k)
+  age_by_gend <- c(age_by_gend,temp)
+}
+
+hh_income <- c()
+
+for (i in 1:17) {
+  k <- ifelse(str_length(i)<2,paste0(0,i),i)
+  temp <- paste0("B19001_0",k)
+  hh_income <- c(hh_income,temp)
+}
+
+educ <- c()
+for (i in 2:25) {
+  k <- ifelse(str_length(i)<2,paste0(0,i),i)
+  temp <- paste0("B15003_0",k)
+  educ <- c(educ,temp)
+}
+
+
+
+indiv_data <- get_acs(geography = "state",
+                      state=c("OR","WA","CA"),
+                      variables=c(
+                        #denominator
+                       "B01001_001",
+                        
+                        #age
+                        age_by_gend,
+                        
+                        #race
+                        "B02001_002",
+                        "B02001_003",
+                        "B02001_004",
+                        "B02001_005",
+                         "B03002_012",
+                        "B02001_006",
+                        "B02001_007",
+                        "B02001_008",
+
+                        
+                        #education
+                        educ,
+                       
+                       # hh income
+                       hh_income
+
+                        
+
+                      ),
+                      geometry=F)
+
+
+indiv_data <- left_join(indiv_data,vars,by=c("variable"="name"))
+indiv_data <- indiv_data %>% dplyr::select(-moe)
+
+write.csv(indiv_data,"~/covid-survey/state_data_for_trudy.csv")
+
