@@ -658,7 +658,7 @@ label(dat$chset8) <- "Prog F v No Prog"
 dat <- dat[order(dat$caseid,dat$choiceofperson,dat$alt),]
 
 
-dat <- dat %>% group_by(caseid) %>% mutate(choiceorder = frank(choiceofperson,ties.method = "dense"))
+dat <- dat %>% group_by(caseid) %>% mutate(choiceorder = data.table::frank(choiceofperson,ties.method = "dense"))
 
 tabulate(dat$choiceorder)
 dat$choiceorder2=dat$choiceorder^2   # allow for quadratic form in choiceorder 

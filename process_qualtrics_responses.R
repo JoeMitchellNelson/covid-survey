@@ -28,14 +28,14 @@ rm(list=ls())
 #note that back-slashes in Stata need to be forward-slashses in R
 DROPBOX <-  "C:/Users/Joe/Dropbox" # change this to your dropbox folder location
 
-DIR <- paste0(DROPBOX,"/VSL-COVID/response_data")
+DIR <- paste0(DROPBOX,"/VSL-COVID/data_from_obsolete_version")
 
 INT <- paste0(DROPBOX,"/VSL-COVID/intermediate-files")
 
 INTERACT <- "$\times$"
 
 # dat is the generic name I chose for the data table. data tables do not require names in Stata.
-dat <- read.csv(paste0(DIR,"/VSL-COVID - July28 - simplified_August 6, 2020_07.51_numeric_cleaned.csv"))
+dat <- read.csv(paste0(DIR,"/VSL-COVID-php-obsolete_January 6, 2021_06.00_numeric-cleaned.csv"))
 dat <- dat[3:nrow(dat),] # drop first 2 observations
 
 # spaces in var names are converted to . in R and completely removed in Stata

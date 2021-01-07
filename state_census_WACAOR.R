@@ -101,3 +101,27 @@ indiv2[,which(!names(indiv2) %in% c("GEOID","NAME","total_pop","med_income"))] <
 indiv_data <- rbind(indiv_data,indiv2)
 
 write.csv(indiv_data,"~/covid-survey/state_data_for_trudy.csv")
+
+indiv_data <- get_acs(geography = "state",
+                      state=c("OR","WA","CA"),
+                      variables=c(
+                        #denominator
+                        total_pop="B01001_001",
+                        
+                        #gender
+                        total_educ="B06009_001",
+                        
+                        
+                        #education
+                        less_than_HS = "B06009_002",
+                        HS = "B06009_003",
+                        some_college = "B06009_004",
+                        bachelors = "B06009_005",
+                        advanced_degree = "B06009_006",
+                        age_18_64 = "B21005_001",
+                        age_o64 = "B27010_051"
+
+                      ),
+                      geometry=F,
+                      output="wide")
+
