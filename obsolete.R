@@ -1,8 +1,8 @@
 require(pacman)
 
-p_load(tidyverse,tidycensus,ggthemes,ggplot2,Hmisc,english,censusr,mclogit,mlogit)
+p_load(tidyverse,tidycensus,ggthemes,ggplot2,Hmisc,english,censusr,mclogit,mlogit,broom,foreign)
 
-dat <- read.csv("~/covid-survey/data/VSL-COVID-php-obsolete_January 6, 2021_06.00_numeric-cleaned.csv")
+#dat <- read.csv("~/covid-survey/data/VSL-COVID-php-obsolete_January 6, 2021_06.00_numeric-cleaned.csv")
 
 vars <- load_variables(year=2018,dataset="acs5")
 
@@ -84,16 +84,63 @@ dat <- left_join(dat,indiv_data,by="GEOID")
 
 #write.csv(dat,"~/covid-survey/obsolete_Jan6_with_census_block_groups.csv")
 
+dat2 <- dat %>% group_by(choice) %>% summarise(fedui2 = max(fedui))
+
+dat <- left_join(dat,dat2)
 
 
-summary(mclogit::mlogit(cbind(best,choice) ~ fedui + months + delcases + deldeaths + 
-                 rule1 + rule2 + rule3 + rule4 + rule5 + rule6 + rule7 + rule8 + rule9 + rule10 + 
-                  unempl + avcost + statusquo,data=dat))
-
-summary(clogit(best ~ fedui + months + delcases + deldeaths + 
+res <- tidy(clogit(best ~ months + delcases + deldeaths + fedui +
                   rule1 + rule2 + rule3 + rule4 + rule5 + rule6 + rule7 + rule8 + rule9 + rule10 + 
-                  unempl + avcost  +strata(caseid),data=dat))
+                  unempl + avcost + strata(caseid),data=dat))
+
+summary(clogit(best ~ deldeaths + delcases + rule1*larule1 + rule2*larule2 +rule3*larule3 + rule4*larule4 + 
+                 rule5*larule5 + rule6*larule6 +rule7*larule7 + rule8*larule8 + rule9*larule9 + rule10*larule10 + 
+                 unempl + avcost + statusquo + strata(choice),data=dat))
+
+summary(clogit(best ~ deldeaths + delcases +
+                 unempl*fedui2 + avcost*fedui2 + statusquo + strata(choice),data=dat))
+
+res$estimate <- res$estimate/res$estimate[which(res$term=="avcost")]
+
+summary(clogit(best ~ fedui + strata(choice),data=dat2))
+
+small <- dat %>% dplyr::select(best,choice,alt,fedui)
+dat2 <- dat %>% ungroup %>% as.data.frame
+
 dat$statquo <- ifelse(dat$statusquo==T,1,0)
 write.csv(dat,"~/covid-survey/for_stata.csv",na=".")
 
+
+
 # fedui  months  delcases  deldeaths   rule1  rule2  rule3  rule4  rule5  rule6  rule7  rule8  rule9  rule10   unempl  avcost  statusquo
+
+
+######## across all policies, could you please check what proportions of people say yes at each household cost, 
+######## and what proportions say yes at each unemployment level.  Those two variables are not independent. 
+
+dat <- read.csv("~/covid-survey/data/main_vars_intx.csv")
+
+summary(clogit(best ~ delcases + deldeaths + 
+                     avcost + statquo + strata(choice),data=dat))
+
+small <- dat %>% dplyr::select(best,caseid,choice,alt,avcost,unempl,fedui)
+small2 <- small %>% group_by(caseid) %>% summarise(cost = mean(avcost))
+small2 <- small2 %>% dplyr::filter(!is.na(cost))
+
+small <- small %>% dplyr::filter(caseid %in% small2$caseid)
+
+small$costbin <- cut(small$avcost,7)
+small$costbin <- ifelse(small$avcost==0,"0",small$costbin)
+small$costbin <- ifelse(small$costbin=="(-1.05,151]","(0,151]",small$costbin)
+
+small3 <- small %>% group_by(costbin) %>% summarise(prop_yes = mean(best))
+
+small$unempbin <- cut(small$unempl,7)
+
+small4 <- small %>% group_by(unempbin) %>% summarise(prop_yes=mean(best))
+
+small5 <- small %>% group_by(unempbin,costbin) %>% summarise(prop_yes=mean(best),n=n())
+
+ggplot(small5) +
+  geom_tile(aes(x=unempbin,y=costbin,fill=prop_yes)) +
+  scale_fill_viridis_c()

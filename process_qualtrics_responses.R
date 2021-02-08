@@ -35,7 +35,9 @@ INT <- paste0(DROPBOX,"/VSL-COVID/intermediate-files")
 INTERACT <- "$\times$"
 
 # dat is the generic name I chose for the data table. data tables do not require names in Stata.
-dat <- read.csv(paste0(DIR,"/VSL-COVID-php-obsolete_January 6, 2021_06.00_numeric-cleaned.csv"))
+#dat <- read.csv(paste0(DIR,"/VSL-COVID-php-obsolete_January 6, 2021_06.00_numeric-cleaned.csv"))
+
+dat <- read.csv("~/covid-survey/data/VSL-COVID-php-obsolete_January 6, 2021_06.00_numeric-cleaned.csv")
 dat <- dat[3:nrow(dat),] # drop first 2 observations
 
 # spaces in var names are converted to . in R and completely removed in Stata
