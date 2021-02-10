@@ -6,7 +6,11 @@ p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
        xtable,knitr,magick,purrr,ggthemes,gifski,extrafont,latex2exp,
        cowplot,mapproj,patchwork,remotes,tictoc,Hmisc,english,readstata13)
 
-dat <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_intx.dta")
+#dat <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_intx.dta")
+dat <- read.dta13("C:/Users/Joe/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_intx.dta")
+
+
+
 
 dat <- dat %>% mutate(con = 5*sconserv + 4*mconserv + 3*moderate + 2*mliberal + 1*sliberal)
 dat$con <- ifelse(dat$con==0,9,dat$con)
