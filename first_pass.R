@@ -49,6 +49,7 @@ heuristics$max_cases <- ifelse(heuristics$max_cases==heuristics$delcases,1,0)
 
 summary(clogit(best ~
                  max_deaths + max_cases +
+                # delcases + deldeaths +
                  unempl + avcost +
 
                  factor(rule1) + factor(rule2) + factor(rule3) + factor(rule4) + factor(rule5) +
