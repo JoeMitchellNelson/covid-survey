@@ -6,8 +6,8 @@ p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
        xtable,knitr,magick,purrr,ggthemes,gifski,extrafont,latex2exp,
        cowplot,mapproj,patchwork,remotes,tictoc,Hmisc,english,readstata13)
 
-#dat <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_intx.dta")
-dat <- read.dta13("C:/Users/Joe/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_intx.dta")
+dat <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_intx.dta")
+#dat <- read.dta13("C:/Users/Joe/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_intx.dta")
 
 
 
@@ -29,6 +29,8 @@ dat$rules <- ifelse(dat$rulesbad==1,"bad",
                     ifelse(dat$rulesgood==1,"good","insufficient"))
 
 dat$schoolage <- ifelse(dat$hhld0to1 ==1 | dat$hhld2to5==1 | dat$hhld6to12==1 | dat$hhld13to17==1,1,0)
+
+dat <- dat %>% group_by(choice) %>% mutate(months2=max(months)) %>% ungroup()
 
 summary(clogit(best ~
                   delcases*con_ + deldeaths*con_ + unempl*con_ + avcost*con_ +
@@ -53,11 +55,11 @@ heuristics$max_cases <- ifelse(heuristics$max_cases==heuristics$delcases,1,0)
 
 summary(clogit(best ~
                  max_deaths + max_cases +
-                # delcases + deldeaths +
+                # I(delcases/months2) + I(deldeaths/months2) +
                  unempl + avcost +
 
-                 factor(rule1) + factor(rule2) + factor(rule3) + factor(rule4) + factor(rule5) +
-                 factor(rule6) + factor(rule7) + factor(rule8) + factor(rule9) + factor(rule10) +
+                 I(rule1) + I(rule2) + I(rule3) + I(rule4) + I(rule5) +
+                 I(rule6) + I(rule7) + I(rule8) + I(rule9) + I(rule10) +
                  
                  # lirule1*rule1 + lirule2*rule2 + lirule3*rule3 + lirule4*rule4 + lirule5*rule5 +
                  # lirule6*rule6 + lirule7*rule7 + lirule8*rule8 + lirule9*rule9 + lirule10*rule10 +
