@@ -33,10 +33,10 @@ dat$schoolage <- ifelse(dat$hhld0to1 ==1 | dat$hhld2to5==1 | dat$hhld6to12==1 | 
 dat <- dat %>% group_by(choice) %>% mutate(months2=max(months)) %>% ungroup()
 
 summary(clogit(best ~
-                  delcases*con_ + deldeaths*con_ + unempl*con_ + avcost*con_ +
+                  I(abscases/months2) + I(absdeaths/months2) + unempl + avcost +
 
-                  rule1*con_ + rule2*con_ + rule3*con_ + rule4*con_ + rule5*con_ +
-                  rule6*con_ + rule7*con_ + rule8*con_ + rule9*con_ + rule10*con_ +
+                  rule1 + rule2 + rule3 + rule4 + rule5 +
+                  rule6 + rule7 + rule8 + rule9 + rule10 +
 
                  # lirule1*rule1 + lirule2*rule2 + lirule3*rule3 + lirule4*rule4 + lirule5*rule5 +
                  # lirule6*rule6 + lirule7*rule7 + lirule8*rule8 + lirule9*rule9 + lirule10*rule10 +
@@ -44,7 +44,7 @@ summary(clogit(best ~
                  # larule1*rule1 + larule2*rule2 + larule3*rule3 + larule4*rule4 + larule5*rule5 +
                  # larule6*rule6 + larule7*rule7 + larule8*rule8 + larule9*rule9 + larule10*rule10 +
 
-                 statquo*con_ +
+                 statquo +
                  strata(choice),data=dat[which(dat$reject==0),]))
 
 
@@ -54,12 +54,15 @@ heuristics$max_cases <- ifelse(heuristics$max_cases==heuristics$delcases,1,0)
 
 
 summary(clogit(best ~
-                 max_deaths + max_cases +
-                # I(delcases/months2) + I(deldeaths/months2) +
+                 max_deaths*max_cases +
+               #  I(delcases/months2) + I(deldeaths/months2) +
                  unempl + avcost +
 
-                 I(rule1) + I(rule2) + I(rule3) + I(rule4) + I(rule5) +
-                 I(rule6) + I(rule7) + I(rule8) + I(rule9) + I(rule10) +
+                 I(rule1) + I(rule2) +
+                 I(rule3) + I(rule4) +
+                 I(rule5) + I(rule6) +
+                 I(rule7) + I(rule8) +
+                 I(rule9) + I(rule10) +
                  
                  # lirule1*rule1 + lirule2*rule2 + lirule3*rule3 + lirule4*rule4 + lirule5*rule5 +
                  # lirule6*rule6 + lirule7*rule7 + lirule8*rule8 + lirule9*rule9 + lirule10*rule10 +
@@ -68,10 +71,9 @@ summary(clogit(best ~
                  # larule6*rule6 + larule7*rule7 + larule8*rule8 + larule9*rule9 + larule10*rule10 +
 
                  statquo +
-                 strata(choice),data=heuristics[which(dat$reject==0),]
+                 strata(choice),data=heuristics[which(dat$reject==0,dat$threealts==0),]
               # ,weights=popwt,method="approximate"
                ))
-
 
 ######## look at data on individuals #############
 
@@ -110,7 +112,7 @@ people$race = ifelse(people$black==1,"black",
                      ifelse(people$multi==1,"multi",
                             ifelse(people$asian==1,"asian","white/hisp")))
 
-summary(lm(idrule3 ~ I(female==0)*schoolage + factor(con)*schoolage, data=people,weights=popwt))
+summary(lm(hhldinc ~ prep, data=people,weights=popwt))
 
 summary(polr(factor(con) ~ govstayout + rules + prep + female + factor(state) +  
               multi +  asian + black + log(hhldinc), data=people[which(people$con<9),],
