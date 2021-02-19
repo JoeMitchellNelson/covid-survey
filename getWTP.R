@@ -30,7 +30,7 @@ rule6_w <- 2
 rule7_w <- 2
 rule8_w <- 2
 rule9_w <- 2
-
+rule10_w <- 2
 
 stbundle <- data.frame(mabsdeaths= mabsdeaths_w-mabsdeaths_wo,
                        mabsnfcases=mabsnfcases_w - mabsnfcases_wo,
@@ -47,12 +47,15 @@ stbundle <- data.frame(mabsdeaths= mabsdeaths_w-mabsdeaths_wo,
                        rule9=rule9_w,
                        rule10=rule10_w,
                        statquo=-1) %>% t() %>% as.data.frame() %>% rownames_to_column("term")
+names(stbundle)[2] <- "val"
 
 ######### "Standard" county/zip characteristics #########
 
 stcounty <- data.frame(OR=0,              
                        WA=0,
                        demeanrp=0,
+                       female=.5,
+                       owninc = median(dat$owninc),
                        pvoterep=median(dat$pvoterep),
                        pvoteother= median(dat$pvoteother),     
                        pzipageunder6=median(dat$pzipageunder6), 
@@ -85,15 +88,18 @@ stcounty <- data.frame(OR=0,
                        reject=        0,
                        monthstwo=     0,  
                        monthsthr=     0) %>% t() %>% as.data.frame() %>% rownames_to_column("term")
+names(stcounty)[2] <- "val"
 
+stand <- rbind(stbundle,stcounty)
 
-getWTP <- left_join(restidy,stbundle,by=c("V7"="term"))
-getWTP <- left_join(getWTP,stcounty,by=c("V8"="term"))
-getWTP$V1.y <- ifelse(is.na(getWTP$V1.y),1,getWTP$V1.y)
-getWTP$total <- getWTP$estimate * getWTP$V1.x * getWTP$V1.y
+getWTP <- left_join(restidy,stand,by=c("term1"="term"))
+getWTP <- left_join(getWTP,stand,by=c("term2"="term"))
+getWTP$val.y <- ifelse(getWTP$term2=="",1,getWTP$val.y)
+getWTP$iscost <- ifelse(str_detect(getWTP$term,"avcost"),1,0)
 
-denom <- sum(getWTP$estimate[which(str_detect(getWTP$term,"avcost"))] * getWTP$V1.y[which(str_detect(getWTP$term,"avcost"))])
+denom <- sum(getWTP$estimate * (getWTP$iscost) * getWTP$val.x * getWTP$val.y)
 
+num <- sum(getWTP$estimate * getWTP$val.x * getWTP$val.y * (1-getWTP$iscost))
 
-totalWTP <- -(sum(getWTP$total,na.rm=T) - sum(getWTP$total[which(str_detect(getWTP$term,"avcost"))]))/denom
+totalWTP <- -num/denom
 

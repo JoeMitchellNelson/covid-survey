@@ -12,11 +12,11 @@ p_load(glmnet,tibble,broom)
 ######### BIG MODEL ##################
 
 
-#dat <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_intx.dta")
-#pair <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/forR_VSL-COVID_binary.csv")
+dat <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_intx.dta")
+pair <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/forR_VSL-COVID_binary.csv")
 
-dat <- read.dta13("C:/Users/Joe/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_intx.dta")
-pair <- read.csv("C:/Users/Joe/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/forR_VSL-COVID_binary.csv")
+#dat <- read.dta13("C:/Users/Joe/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_intx.dta")
+#pair <- read.csv("C:/Users/Joe/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/forR_VSL-COVID_binary.csv")
 
 #### CHANGE DEFINITION OF DEATH ######
 #dat$mabsdeaths <- (dat$mabsdeaths/dat$countypop)*100000
@@ -70,13 +70,15 @@ pair.int <- pair.int[,setdiff(1:ncol(pair.int),nvwic)]
 cv.lasso <- cv.glmnet(x = pair.int[,3:ncol(pair.int)], y = pair.int[,1], family = "binomial", alpha = 1, lambda = NULL,weights=pair.int[,2])
 
 model <- glmnet(x = pair.int[,3:ncol(pair.int)],y = pair.int[,1], alpha = 1, family = "binomial",
-                lambda = exp(-5))
+                lambda = exp(-6.2))
                # lambda = cv.lasso$lambda.min,weights=pair.int[,2])
 plot(cv.lasso)
 coef(model)
 
 keepers <- model$beta %>% as.matrix %>% as.data.frame() %>% rownames_to_column("vars") %>% dplyr::filter(s0!=0)
 keepers <- keepers$vars %>% str_replace_all(":","*")
+keepers <- keepers[which(!keepers %in% "statquo*reject")]
+
 
 DMRPBASEVARS <- paste(BASEVARS,"*demeanrp")
 DMRPINTX <- paste(keepers,"*demeanrp")
@@ -84,16 +86,50 @@ DMRPVARS <- c(DMRPBASEVARS,DMRPINTX)
 
 NORPVARS <- c(BASEVARS,keepers)
 
+
 form1 <- paste0("best ~ ", paste(NORPVARS,collapse=" + ")," + strata(choice)") %>% as.formula
 summary(res <- clogit(form1,data=dat))
 #stargazer(res,type="text")
 
-restidy <- broom::tidy(res) %>% dplyr::filter(!is.na(estimate)) %>% 
-  dplyr::select(-conf.low,-conf.high)
+restidy <- broom::tidy(res) %>% dplyr::filter(!is.na(estimate))
 restidy <- restidy[which(!str_detect(restidy$term,"demeanrp")),]
 
 ########## sort variables and make labels for lasso results ###########
 
+restidy <- broom::tidy(res) %>% dplyr::filter(!is.na(estimate))
+restidy[,(dim(restidy)[2]+1):(dim(restidy)[2]+2)] <- str_split_fixed(restidy$term,":",n=2)
+names(restidy)[(dim(restidy)[2]-1):(dim(restidy)[2])] <- c("term1","term2")
+
+medians <- summary(dat[which(dat$statquo==0),])[3,] %>% as.data.frame() %>% rownames_to_column("var")
+names(medians)[2] <- "val1"
+medians2 <- summary(dat[which(dat$statquo==1),])[3,] %>% as.data.frame() %>% rownames_to_column("var")
+names(medians2)[2] <- "valstatquo"
+
+medians$val1 <- str_remove(medians$val1,"Median :") %>% trimws() %>% as.character() %>% as.numeric()
+medians$var <- trimws(medians$var)
+medians2$valstatquo <- str_remove(medians2$valstatquo,"Median :") %>% trimws() %>% as.character() %>% as.numeric()
+medians2$var <- trimws(medians2$var)
+
+
+medians <- left_join(medians,medians2)
+medians$valstatquo <- ifelse(!medians$var %in% BASEVARS,0,medians$valstatquo)
+medians$val <- medians$val1 - medians$valstatquo
+medians <- medians %>% dplyr::select(var,val)
+
+getWTP <- left_join(restidy,medians,by=c("term1"="var"))
+getWTP <- left_join(getWTP,medians,by=c("term2"="var"))
+getWTP$val.y <- ifelse(getWTP$term2=="",1,getWTP$val.y)
+getWTP$iscost <- ifelse(str_detect(getWTP$term,"avcost"),1,0)
+
+getWTP$totals <- getWTP$estimate*getWTP$val.x*getWTP$val.y
+
+denom <- sum(getWTP$totals * (getWTP$iscost))/medians$val[which(medians$var=="avcost")]
+
+num <- sum(getWTP$totals * (1-getWTP$iscost))
+
+totalWTP <- -num/denom
+
+###
 
 basevars <- names(pdat)[vwic]
 names_key1 <- data.frame(var=basevars,code=(1:length(basevars))*10000)
@@ -117,8 +153,8 @@ restidy[,7:8] <- str_split_fixed(restidy$term,":",n=2)
 
 
 
-restidy <- left_join(restidy,varlabs,by=c("V7"="x"))
-restidy <- left_join(restidy,varlabs,by=c("V8"="x"))
+restidy <- left_join(restidy,varlabs,by=c("V1"="x"))
+restidy <- left_join(restidy,varlabs,by=c("V2"="x"))
 
 for (i in 1:nrow(restidy)) {
   if (restidy$y.x[i]=="" | is.na(restidy$y.x[i])) {
@@ -130,7 +166,7 @@ for (i in 1:nrow(restidy)) {
 }
 
 restidy$label <- ifelse(!is.na(restidy$y.y) & restidy$y.y!="", paste0(restidy$y.x," X ",restidy$y.y),
-                        ifelse(is.na(restidy$y.y),paste0(restidy$y.x),paste0(restidy$y.x," X ",restidy$V8)))
+                        ifelse(is.na(restidy$y.y),paste0(restidy$y.x),paste0(restidy$y.x," X ",restidy$V2)))
 
 restidy <- restidy %>% dplyr::select(term,label,estimate,std.error,p.value)
 restidy$star <- ifelse(restidy$p.value<=0.05,"*","")
@@ -267,6 +303,56 @@ restidy$label <- ifelse(!is.na(restidy$y.y) & restidy$y.y!="", paste0(restidy$y.
 
 restidy <- restidy %>% dplyr::select(term,label,estimate,std.error,p.value)
 restidy$star <- ifelse(restidy$p.value<=0.05,"*","")
+
+####           ###          ###           ### #               
+#   #        #    #        #   #        #     #       
+#    #    #       #     #      #     #        #  
+#      ###          ###           ###         #
+
+
+############################################
+########### TINY MODEL ONLY ################
+############################################
+
+####           ###          ###           ### #               
+#   #        #    #        #   #        #     #       
+#    #    #       #     #      #     #        #  
+#      ###          ###           ###         #
+
+
+dat <- read.dta13("C:/Users/Joe/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_intx.dta")
+
+summary(res <- clogit(best ~ mabsdeaths*pvotedem + mabsnfcases*pvotedem + avcost*pvotedem + unempl*pvotedem + statquo*pvotedem + 
+                        
+                        rule1*pvotedem + rule2*pvotedem + rule3*pvotedem + rule4*pvotedem + rule5*pvotedem +
+                        rule6*pvotedem + rule7*pvotedem + rule8*pvotedem + rule9*pvotedem + rule10*pvotedem +
+                        
+                        strata(choice),data=dat))
+
+restidy <- broom::tidy(res) %>% dplyr::filter(!is.na(estimate))
+restidy[,(dim(restidy)[2]+1):(dim(restidy)[2]+2)] <- str_split_fixed(restidy$term,":",n=2)
+names(restidy)[(dim(restidy)[2]-1):(dim(restidy)[2])] <- c("term1","term2")
+
+medians <- summary(dat[which(dat$statquo==0),])[3,] %>% as.data.frame() %>% rownames_to_column("var")
+names(medians)[2] <- "val"
+medians$val <- str_remove(medians$val,"Median :") %>% trimws() %>% as.character() %>% as.numeric()
+medians$var <- trimws(medians$var)
+
+getWTP <- left_join(restidy,medians,by=c("term1"="var"))
+getWTP <- left_join(getWTP,medians,by=c("term2"="var"))
+getWTP$val.y <- ifelse(getWTP$term2=="",1,getWTP$val.y)
+getWTP$iscost <- ifelse(str_detect(getWTP$term,"avcost"),1,0)
+
+getWTP$val.x <- ifelse(str_detect(getWTP$term,"deaths|cases"),-1*getWTP$val.x,getWTP$val.x)
+getWTP$val.x <- ifelse(str_detect(getWTP$term1,"statquo"),-1,getWTP$val.x)
+getWTP$val.y <- ifelse(str_detect(getWTP$term2,"statquo"),-1,getWTP$val.y)
+
+
+denom <- sum(getWTP$estimate * (getWTP$iscost) * getWTP$val.x * getWTP$val.y)/270
+
+num <- sum(getWTP$estimate * getWTP$val.x * getWTP$val.y)
+
+totalWTP <- -num/denom
 
 
 

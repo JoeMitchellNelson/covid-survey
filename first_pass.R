@@ -9,16 +9,16 @@ p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
 dat <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_intx.dta")
 #dat <- read.dta13("C:/Users/Joe/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_intx.dta")
 
+# below is replaced by ownclinear
+# dat$costbelief <- ifelse(dat$owncmuchhi==1,2,
+#                          ifelse(dat$owncsomehi==1,1,
+#                                 ifelse(dat$owncsomelo==1,-1,
+#                                        ifelse(dat$owncmuchlo==1,-2,0))))
 
 
+dat$costbelief <- factor(dat$costbelief)
+dat <- within(dat, costbelief <- relevel(costbelief, ref = 3))
 
-dat <- dat %>% mutate(con = 5*sconserv + 4*mconserv + 3*moderate + 2*mliberal + 1*sliberal)
-dat$con <- ifelse(dat$con==0,9,dat$con)
-dat$con_ <- as.factor(dat$con)
-
-fixfed <- dat %>% group_by(choice) %>% summarise(fedui2=max(fedui))
-
-dat <- left_join(dat,fixfed)
 dat$state <- ifelse(dat$CA==1,"CA",
                     ifelse(dat$OR==1,"OR","WA"))
 
@@ -33,30 +33,35 @@ dat$schoolage <- ifelse(dat$hhld0to1 ==1 | dat$hhld2to5==1 | dat$hhld6to12==1 | 
 dat <- dat %>% group_by(choice) %>% mutate(months2=max(months)) %>% ungroup()
 
 summary(clogit(best ~
-                  I(abscases/months2) + I(absdeaths/months2) + unempl + avcost +
+                  mabsdeaths + mabsnfcases + unempl*fedui +
+                  I(log(owninc-avcost+1)) +
 
                   rule1 + rule2 + rule3 + rule4 + rule5 +
                   rule6 + rule7 + rule8 + rule9 + rule10 +
 
                  # lirule1*rule1 + lirule2*rule2 + lirule3*rule3 + lirule4*rule4 + lirule5*rule5 +
                  # lirule6*rule6 + lirule7*rule7 + lirule8*rule8 + lirule9*rule9 + lirule10*rule10 +
-                 #
+                 # 
                  # larule1*rule1 + larule2*rule2 + larule3*rule3 + larule4*rule4 + larule5*rule5 +
                  # larule6*rule6 + larule7*rule7 + larule8*rule8 + larule9*rule9 + larule10*rule10 +
 
                  statquo +
-                 strata(choice),data=dat[which(dat$reject==0),]))
+                 strata(choice),data=dat[which(dat$months==1),]))
 
 
 heuristics <- dat %>% group_by(choice) %>% mutate(max_deaths = max(deldeaths),max_cases=max(delcases))
 heuristics$max_deaths <- ifelse(heuristics$max_deaths==heuristics$deldeaths,1,0)
 heuristics$max_cases <- ifelse(heuristics$max_cases==heuristics$delcases,1,0)
 
+new <- dat[which(dat$statquo==0),] %>% group_by(caseid) %>% summarise(rule2 = mean(rule2),
+                                                                      costb = first(costbelief),
+                                                                      li2 = first(lirule2))
+summary(lm(as.numeric(costb) ~ rule2*li2,data=new))
 
 summary(clogit(best ~
-                 max_deaths*max_cases +
-               #  I(delcases/months2) + I(deldeaths/months2) +
-                 unempl + avcost +
+                 max_deaths + max_cases +
+                # absdeaths*factor(months) + abscases*factor(months) +
+                 unempl + I(owninc-avcost) +
 
                  I(rule1) + I(rule2) +
                  I(rule3) + I(rule4) +
@@ -70,10 +75,28 @@ summary(clogit(best ~
                  # larule1*rule1 + larule2*rule2 + larule3*rule3 + larule4*rule4 + larule5*rule5 +
                  # larule6*rule6 + larule7*rule7 + larule8*rule8 + larule9*rule9 + larule10*rule10 +
 
-                 statquo +
-                 strata(choice),data=heuristics[which(dat$reject==0,dat$threealts==0),]
-              # ,weights=popwt,method="approximate"
+                 statquo*factor(costbelief) +
+                 strata(choice),data=heuristics
+               ,weights=popwt,method="approximate"
                ))
+
+
+ggplot(dat[which(dat$statquo==0),]) +
+  geom_point(aes(x=delcases,y=avcost,color=log(countypop)),alpha=.3) +
+  scale_color_viridis_c() +
+  geom_smooth(aes(x=delcases,y=avcost),method="lm",se=T)
+
+ggplot(dat[which(dat$statquo==0),]) +
+  geom_point(aes(x=delcases/(months*countypop),y=avcost,color=log(countypop)),alpha=.3) +
+  scale_color_viridis_c() +
+  geom_smooth(aes(x=delcases/(months*countypop),y=avcost),method="lm",se=T)
+
+ggplot(dat[which(dat$statquo==0 & dat$countypop > 100000),]) +
+  geom_point(aes(x=delcases/(months*countypop),y=avcost,color=log(countypop)),alpha=.3) +
+  scale_color_viridis_c() +
+  geom_smooth(aes(x=delcases/(months*countypop),y=avcost),method="lm",se=T)
+
+summary(lm(avcost ~ fedui + unempl, data=dat[which(dat$statquo==0 & dat$months==1),]))
 
 ######## look at data on individuals #############
 
