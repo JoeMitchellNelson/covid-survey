@@ -12,15 +12,62 @@ p_load(glmnet,tibble,broom)
 ######### BIG MODEL ##################
 
 
-dat <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_intx.dta")
-pair <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/forR_VSL-COVID_binary.csv")
+dat <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.dta")
+pair <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/forR_VSL-COVID_two-alt_long.dta")
 
 #dat <- read.dta13("C:/Users/Joe/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_intx.dta")
 #pair <- read.csv("C:/Users/Joe/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/forR_VSL-COVID_binary.csv")
 
-#### CHANGE DEFINITION OF DEATH ######
-#dat$mabsdeaths <- (dat$mabsdeaths/dat$countypop)*100000
-#dat$mabsnfcases <- (dat$mabsnfcases/dat$countypop)*100000
+varind <- c(4:18,26,27,30:33,35:36,39:40,42:43,45:74,89:90,92:96,107:110,112:121,122,173:182,198:207)
+
+pdat <- pair %>% dplyr::filter(!is.na(y2020m6deaths))
+pdat <- pdat[,c(3,varind)]
+
+# col numbers of vars that VARY WITHIN choice set (e.g. deaths, rules)
+vwic <- 2:16
+# col numbers of vars that are CONSTANT in each choice set (e.g. gender, income)
+nvwic <- 17:ncol(pdat)
+
+for (i in vwic) {
+  for (j in nvwic) {
+    pdat$newvar <- pdat[,i]*pdat[,j]
+    names(pdat)[which(names(pdat)=="newvar")] <- paste0(names(pdat)[i],":",names(pdat)[j])
+  }
+}
+
+pair.int <- as.matrix(pdat)
+
+pair.int <- pair.int[,setdiff(1:ncol(pair.int),nvwic)]
+
+
+cv.lasso <- cv.glmnet(x = pair.int[,2:ncol(pair.int)], y = pair.int[,1], family = "binomial", alpha = 1, lambda = NULL)
+
+
+
+model <- glmnet(x = pair.int[,2:ncol(pair.int)],y = pair.int[,1], alpha = 1, family = "binomial",
+               # lambda = exp(-6.2))
+                lambda = cv.lasso$lambda.min)
+plot(cv.lasso)
+coef(model)
+
+
+keepers <- model$beta %>% as.matrix %>% as.data.frame() %>% rownames_to_column("vars") %>% dplyr::filter(s0!=0)
+keepers <- keepers$vars %>% str_replace_all(":","*")
+keepers <- keepers[which(!keepers %in% "statquo*reject")]
+
+keepers <- c(names(pdat)[vwic],keepers) %>% unique()
+
+formlasso <- paste0("best ~ ", paste(keepers,collapse=" + ")," + strata(choice)") %>% as.formula
+summary(res <- clogit(formlasso,data=dat))
+
+broom::tidy(res) %>% dplyr::filter(str_detect(term,"avcost"))
+
+##########################################################################################
+##########################################################################################
+##########################################################################################
+##########################################################################################
+##########################################################################################
+##########################################################################################
 
 
 tempdat <- dat %>% 

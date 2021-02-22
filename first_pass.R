@@ -6,7 +6,7 @@ p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
        xtable,knitr,magick,purrr,ggthemes,gifski,extrafont,latex2exp,
        cowplot,mapproj,patchwork,remotes,tictoc,Hmisc,english,readstata13)
 
-dat <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_intx.dta")
+#dat <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_intx.dta")
 #dat <- read.dta13("C:/Users/Joe/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_intx.dta")
 
 # below is replaced by ownclinear
@@ -15,9 +15,8 @@ dat <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/interm
 #                                 ifelse(dat$owncsomelo==1,-1,
 #                                        ifelse(dat$owncmuchlo==1,-2,0))))
 
+dat <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.csv")
 
-dat$costbelief <- factor(dat$costbelief)
-dat <- within(dat, costbelief <- relevel(costbelief, ref = 3))
 
 dat$state <- ifelse(dat$CA==1,"CA",
                     ifelse(dat$OR==1,"OR","WA"))
@@ -30,24 +29,48 @@ dat$rules <- ifelse(dat$rulesbad==1,"bad",
 
 dat$schoolage <- ifelse(dat$hhld0to1 ==1 | dat$hhld2to5==1 | dat$hhld6to12==1 | dat$hhld13to17==1,1,0)
 
-dat <- dat %>% group_by(choice) %>% mutate(months2=max(months)) %>% ungroup()
 
-summary(clogit(best ~
-                  mabsdeaths + mabsnfcases + unempl*fedui +
-                  I(log(owninc-avcost+1)) +
+dat <- dat %>% mutate(demeanduration = (Durationinseconds-mean(Durationinseconds))/sd(Durationinseconds))
+dat <- dat %>% mutate(demeanlogduration = (log(Durationinseconds)-mean(log(Durationinseconds)))/sd(log(Durationinseconds)))
 
-                  rule1 + rule2 + rule3 + rule4 + rule5 +
-                  rule6 + rule7 + rule8 + rule9 + rule10 +
+form1 <- function (x,intx) {
+  a <- paste(x,"*",intx,collapse=" + ")
+  paste0("best ~ ",a," + strata(choice)") %>% as.formula()
+}
 
-                 # lirule1*rule1 + lirule2*rule2 + lirule3*rule3 + lirule4*rule4 + lirule5*rule5 +
-                 # lirule6*rule6 + lirule7*rule7 + lirule8*rule8 + lirule9*rule9 + lirule10*rule10 +
-                 # 
-                 # larule1*rule1 + larule2*rule2 + larule3*rule3 + larule4*rule4 + larule5*rule5 +
-                 # larule6*rule6 + larule7*rule7 + larule8*rule8 + larule9*rule9 + larule10*rule10 +
+form2 <- function (x,intx) {
+  a <- paste(x,collapse=" + ")
+  paste0("best ~ ",a," + strata(choice)") %>% as.formula()
+}
 
-                 statquo +
-                 strata(choice),data=dat[which(dat$months==1),]))
+###### VAR GROUPS ###########
 
+dat$ideol <- ifelse(dat$ideolconserv==1,"conservative",
+                    ifelse(dat$ideolliberal==1,"liberal","moderate"))
+dat$ideol <- as.factor(dat$ideol)
+dat <- within(dat, ideol <- relevel(ideol, ref = 1))
+
+
+basevars <- c("mabsdeaths","mabsnfcases","avcost","unempl")
+basefedui <- c("mabsdeaths","mabsnfcases","avcost*fedui","unempl*fedui")
+rules <- c("rule1","rule2","rule3","rule4","rule5","rule6","rule7","rule8","rule9","rule10")
+larules <- paste0("la",rules) %>% paste(rules,sep="*")
+lirules <- paste0("li",rules) %>% paste(rules,sep="*")
+ideolbase <- paste(basevars,"ideol",sep="*")
+ideolbasefedui <- paste(basefedui,"ideol",sep="*")
+ideolrules <- paste(rules,"ideol",sep="*")
+
+
+#######################################
+
+f <- form2(c(ideolbasefedui,ideolrules,"statquo"),
+           "demeanrp")
+
+summary(a <- clogit(f,data=dat,
+                    weights=popwt,
+                    method="approximate"))
+
+b <- broom::tidy(a) %>% dplyr::filter(!is.na(estimate) & !str_detect(term,"demeanrp")) %>% mutate(stars = ifelse(p.value<0.05,"*",""))
 
 heuristics <- dat %>% group_by(choice) %>% mutate(max_deaths = max(deldeaths),max_cases=max(delcases))
 heuristics$max_deaths <- ifelse(heuristics$max_deaths==heuristics$deldeaths,1,0)
