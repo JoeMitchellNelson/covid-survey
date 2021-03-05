@@ -11,6 +11,7 @@ loadfonts(device="win")
 chosen_font <- "CMU Serif"
 
 vars <- load_variables(year=2018,dataset="acs5")
+vars2 <- load_variables(year=2010,dataset="sf1")
 
 ##############################################
 ######### CENSUS COUNTIES ####################
@@ -440,4 +441,35 @@ for (i in c(3,6:8)) {
 }
 cat(econ_table)
 
+####################################################
 
+
+vars2 <- load_variables(year=2010,dataset="sf1")
+
+
+census_data <- get_decennial(geography = "county",
+                       state=c("OR","WA","CA"),
+                       year=2010,
+                       variables=c(
+                         total="H002001",
+                         urban="H002002",
+                         rural="H002005"), 
+                       geometry=F,                
+                       shift_geo=F,
+                       output="wide")
+
+write.csv(census_data,"~/covid-survey/urbanicity_county.csv")
+
+census_data <- get_decennial(geography = "zcta",
+                             year=2010,
+                             variables=c(
+                               total="H002001",
+                               urban="H002002",
+                               rural="H002005"), 
+                             geometry=F,                
+                             shift_geo=F,
+                             output="wide")
+
+census_data <- census_data %>% dplyr::filter(GEOID > 90000)
+
+write.csv(census_data,"~/covid-survey/urbanicity_zcta.csv")

@@ -1,0 +1,134 @@
+"","GEOID","NAME","total","urban","rural"
+"1","06011","Colusa County, California",7883,4941,2942
+"2","06007","Butte County, California",95835,76924,18911
+"3","06001","Alameda County, California",582549,580275,2274
+"4","06003","Alpine County, California",1760,0,1760
+"5","06005","Amador County, California",18032,5292,12740
+"6","06009","Calaveras County, California",27925,4915,23010
+"7","06013","Contra Costa County, California",400263,397012,3251
+"8","06015","Del Norte County, California",11186,6690,4496
+"9","06031","Kings County, California",43867,38311,5556
+"10","06021","Glenn County, California",10778,6262,4516
+"11","06023","Humboldt County, California",61559,41268,20291
+"12","06025","Imperial County, California",56067,45363,10704
+"13","06017","El Dorado County, California",88159,55624,32535
+"14","06019","Fresno County, California",315531,279288,36243
+"15","06027","Inyo County, California",9478,4619,4859
+"16","06029","Kern County, California",284367,248791,35576
+"17","06043","Mariposa County, California",10188,0,10188
+"18","06033","Lake County, California",35492,23281,12211
+"19","06035","Lassen County, California",12710,4447,8263
+"20","06037","Los Angeles County, California",3445076,3420978,24098
+"21","06039","Madera County, California",49140,29818,19322
+"22","06041","Marin County, California",111214,101808,9406
+"23","06059","Orange County, California",1048907,1047133,1774
+"24","06045","Mendocino County, California",40323,19519,20804
+"25","06047","Merced County, California",83698,70949,12749
+"26","06049","Modoc County, California",5192,1416,3776
+"27","06051","Mono County, California",13912,8420,5492
+"28","06053","Monterey County, California",139048,121490,17558
+"29","06055","Napa County, California",54759,45171,9588
+"30","06057","Nevada County, California",52590,28179,24411
+"31","06071","San Bernardino County, California",699637,646367,53270
+"32","06067","Sacramento County, California",555932,544855,11077
+"33","06069","San Benito County, California",17870,12938,4932
+"34","06061","Placer County, California",152648,122635,30013
+"35","06063","Plumas County, California",15566,2579,12987
+"36","06065","Riverside County, California",800707,755458,45249
+"37","06077","San Joaquin County, California",233755,213651,20104
+"38","06073","San Diego County, California",1164786,1123536,41250
+"39","06075","San Francisco County, California",376942,376941,1
+"40","06093","Siskiyou County, California",23910,7549,16361
+"41","06079","San Luis Obispo County, California",117315,96921,20394
+"42","06081","San Mateo County, California",271031,264988,6043
+"43","06083","Santa Barbara County, California",152834,143442,9392
+"44","06085","Santa Clara County, California",631920,624604,7316
+"45","06087","Santa Cruz County, California",104476,90043,14433
+"46","06089","Shasta County, California",77313,53367,23946
+"47","06091","Sierra County, California",2328,7,2321
+"48","06115","Yuba County, California",27635,19160,8475
+"49","06095","Solano County, California",152698,146654,6044
+"50","06097","Sonoma County, California",204572,172126,32446
+"51","06099","Stanislaus County, California",179503,164402,15101
+"52","06101","Sutter County, California",33858,28491,5367
+"53","06103","Tehama County, California",26987,12600,14387
+"54","06105","Trinity County, California",8681,0,8681
+"55","06111","Ventura County, California",281695,271912,9783
+"56","06113","Yolo County, California",75054,69421,5633
+"57","06107","Tulare County, California",141696,116509,25187
+"58","06109","Tuolumne County, California",31244,15348,15896
+"59","41061","Union County, Oregon",11489,6541,4948
+"60","41063","Wallowa County, Oregon",4108,0,4108
+"61","41065","Wasco County, Oregon",11487,7176,4311
+"62","41067","Washington County, Oregon",212450,200896,11554
+"63","41069","Wheeler County, Oregon",895,0,895
+"64","41071","Yamhill County, Oregon",37110,28161,8949
+"65","41017","Deschutes County, Oregon",80139,51844,28295
+"66","41001","Baker County, Oregon",8826,4498,4328
+"67","41003","Benton County, Oregon",36245,29459,6786
+"68","41005","Clackamas County, Oregon",156945,128740,28205
+"69","41007","Clatsop County, Oregon",21546,12866,8680
+"70","41009","Columbia County, Oregon",20698,11474,9224
+"71","41011","Coos County, Oregon",30593,18578,12015
+"72","41013","Crook County, Oregon",10202,4884,5318
+"73","41015","Curry County, Oregon",12613,7428,5185
+"74","41019","Douglas County, Oregon",48915,28553,20362
+"75","41021","Gilliam County, Oregon",1156,0,1156
+"76","41023","Grant County, Oregon",4344,0,4344
+"77","41039","Lane County, Oregon",156112,128267,27845
+"78","41025","Harney County, Oregon",3835,2111,1724
+"79","41027","Hood River County, Oregon",9271,4870,4401
+"80","41029","Jackson County, Oregon",90937,72470,18467
+"81","41035","Klamath County, Oregon",32774,18684,14090
+"82","41037","Lake County, Oregon",4439,1531,2908
+"83","41031","Jefferson County, Oregon",9815,3382,6433
+"84","41033","Josephine County, Oregon",38001,20686,17315
+"85","41051","Multnomah County, Oregon",324832,320735,4097
+"86","41041","Lincoln County, Oregon",30610,19534,11076
+"87","41043","Linn County, Oregon",48821,33467,15354
+"88","41045","Malheur County, Oregon",11692,6342,5350
+"89","41047","Marion County, Oregon",120948,104590,16358
+"90","41049","Morrow County, Oregon",4442,2010,2432
+"91","41053","Polk County, Oregon",30302,24204,6098
+"92","41055","Sherman County, Oregon",918,0,918
+"93","41057","Tillamook County, Oregon",18359,3532,14827
+"94","41059","Umatilla County, Oregon",29693,20755,8938
+"95","53017","Douglas County, Washington",16004,10909,5095
+"96","53003","Asotin County, Washington",9872,9099,773
+"97","53007","Chelan County, Washington",35465,22979,12486
+"98","53005","Benton County, Washington",68618,62006,6612
+"99","53001","Adams County, Washington",6242,3138,3104
+"100","53009","Clallam County, Washington",35582,22896,12686
+"101","53011","Clark County, Washington",167413,146482,20931
+"102","53013","Columbia County, Washington",2136,1275,861
+"103","53015","Cowlitz County, Washington",43450,31392,12058
+"104","53019","Ferry County, Washington",4403,0,4403
+"105","53021","Franklin County, Washington",24423,21028,3395
+"106","53023","Garfield County, Washington",1233,0,1233
+"107","53039","Klickitat County, Washington",9786,3739,6047
+"108","53025","Grant County, Washington",35083,19551,15532
+"109","53027","Grays Harbor County, Washington",35166,20880,14286
+"110","53029","Island County, Washington",40234,19005,21229
+"111","53031","Jefferson County, Washington",17767,7029,10738
+"112","53033","King County, Washington",851261,824563,26698
+"113","53035","Kitsap County, Washington",107367,89563,17804
+"114","53041","Lewis County, Washington",34050,12809,21241
+"115","53037","Kittitas County, Washington",21900,11105,10795
+"116","53057","Skagit County, Washington",51473,34777,16696
+"117","53043","Lincoln County, Washington",5776,0,5776
+"118","53045","Mason County, Washington",32518,8615,23903
+"119","53047","Okanogan County, Washington",22245,3560,18685
+"120","53049","Pacific County, Washington",15547,5731,9816
+"121","53051","Pend Oreille County, Washington",7936,985,6951
+"122","53053","Pierce County, Washington",325375,302757,22618
+"123","53055","San Juan County, Washington",13313,0,13313
+"124","53069","Wahkiakum County, Washington",2067,0,2067
+"125","53059","Skamania County, Washington",5628,0,5628
+"126","53061","Snohomish County, Washington",286659,254412,32247
+"127","53063","Spokane County, Washington",201434,175263,26171
+"128","53065","Stevens County, Washington",21156,3753,17403
+"129","53067","Thurston County, Washington",108182,85783,22399
+"130","53077","Yakima County, Washington",85474,65171,20303
+"131","53075","Whitman County, Washington",19323,13297,6026
+"132","53071","Walla Walla County, Washington",23451,19393,4058
+"133","53073","Whatcom County, Washington",90665,66873,23792

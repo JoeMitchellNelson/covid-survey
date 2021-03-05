@@ -15,9 +15,13 @@ p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
 #                                 ifelse(dat$owncsomelo==1,-1,
 #                                        ifelse(dat$owncmuchlo==1,-2,0))))
 
-dat <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.csv")
+dat <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.csv") %>% dplyr::filter(rejectonly==0,owninc>0) 
 
+removal <- dat %>% group_by(caseid) %>% summarise(c = min(mabsnfcases)) %>% dplyr::filter(c < 0)
+dat <- dat %>% dplyr::filter(!caseid %in% removal$caseid) %>% dplyr::filter(Durationinseconds > 420) %>% dplyr::filter(owninc>0)
 
+dat <- dat %>% mutate(sqrtnetincome = (owninc*1000/12 - avcost)^.5)
+summary(dat$sqrtnetincome)
 dat$state <- ifelse(dat$CA==1,"CA",
                     ifelse(dat$OR==1,"OR","WA"))
 
@@ -51,9 +55,13 @@ dat$ideol <- as.factor(dat$ideol)
 dat <- within(dat, ideol <- relevel(ideol, ref = 1))
 
 
+dat$fedui2 <- ifelse(dat$statquo==1,0,dat$fedui)
+
 basevars <- c("mabsdeaths","mabsnfcases","avcost","unempl")
 basefedui <- c("mabsdeaths","mabsnfcases","avcost*fedui","unempl*fedui")
 rules <- c("rule1","rule2","rule3","rule4","rule5","rule6","rule7","rule8","rule9","rule10")
+rulesfactors <- paste("factor(",rules,")")
+rulesany <- paste("I(",rules,">1)")
 larules <- paste0("la",rules) %>% paste(rules,sep="*")
 lirules <- paste0("li",rules) %>% paste(rules,sep="*")
 ideolbase <- paste(basevars,"ideol",sep="*")
@@ -61,9 +69,10 @@ ideolbasefedui <- paste(basefedui,"ideol",sep="*")
 ideolrules <- paste(rules,"ideol",sep="*")
 
 
+
 #######################################
 
-f <- form2(c(ideolbasefedui,ideolrules,"statquo"),
+f <- form1(c(basefedui,rulesfactors,"statquo"),
            "demeanrp")
 
 summary(a <- clogit(f,data=dat,
@@ -81,10 +90,12 @@ new <- dat[which(dat$statquo==0),] %>% group_by(caseid) %>% summarise(rule2 = me
                                                                       li2 = first(lirule2))
 summary(lm(as.numeric(costb) ~ rule2*li2,data=new))
 
+dat <- dat %>% dplyr::mutate(nocommute = pzipiconstr + pzipiagric + pzipiartent + pzipimanuf + pzipitransp + pzipiwholes + pzipiretail + pzipiothserv)
+summary(dat$nocommute)
+
 summary(clogit(best ~
-                 max_deaths + max_cases +
-                # absdeaths*factor(months) + abscases*factor(months) +
-                 unempl + I(owninc-avcost) +
+                 mabsdeaths + mabsnfcases +
+                 unempl + avcost*nocommute*havzipindus +
 
                  I(rule1) + I(rule2) +
                  I(rule3) + I(rule4) +
@@ -98,9 +109,9 @@ summary(clogit(best ~
                  # larule1*rule1 + larule2*rule2 + larule3*rule3 + larule4*rule4 + larule5*rule5 +
                  # larule6*rule6 + larule7*rule7 + larule8*rule8 + larule9*rule9 + larule10*rule10 +
 
-                 statquo*factor(costbelief) +
-                 strata(choice),data=heuristics
-               ,weights=popwt,method="approximate"
+                 statquo +
+                 strata(choice),data=dat
+              # ,weights=popwt,method="approximate"
                ))
 
 
@@ -186,3 +197,12 @@ idplot9 <- ggplot(people) + geom_histogram(aes(x=idrule9),bins=4,fill="forestgre
 idplot10 <- ggplot(people) + geom_histogram(aes(x=idrule10),bins=4,fill="forestgreen",color="black") +labs(x="Institutions",y="") + theme_minimal()
 
 (idplot1 + idplot2) / (idplot3 + idplot4) / (idplot5 + idplot6) / (idplot7 + idplot8) / (idplot9 + idplot10)
+
+
+###########
+
+raw$Dur <- raw$Duration..in.seconds. %>% as.character() %>% as.numeric
+summary(raw$Dur)
+
+ggplot(raw[which(raw$Dur<420),]) +
+  geom_histogram(aes(x=Dur,fill=Dur))

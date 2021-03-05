@@ -18,15 +18,21 @@ pair <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/inter
 #dat <- read.dta13("C:/Users/Joe/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_intx.dta")
 #pair <- read.csv("C:/Users/Joe/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/forR_VSL-COVID_binary.csv")
 
-varind <- c(4:18,26,27,30:33,35:36,39:40,42:43,45:74,89:90,92:96,107:110,112:121,122,173:182,198:207)
 
-pdat <- pair %>% dplyr::filter(!is.na(y2020m6deaths))
-pdat <- pdat[,c(3,varind)]
+varind <- "OR|WA|CA|^ageb|^y2020|^countyfutr|^countypast|white|black|asian|439d25a030
+|^ideol|^idrule|^inc|^layoff|^ownc|^prep|^rules|^pvote|^vuln|^wrong|^pzip|certain|weight" %>% str_detect(str=names(pair)) %>% which()
+
+varind <- c(355:370,varind)
+pdat <- pair[,varind]
+
+pdat <- pdat %>% dplyr::filter(!is.na(y2020m6deaths))
+pdat <- pdat %>% dplyr::select(best,weight,everything()) %>% dplyr::select(-agebcont)
+
 
 # col numbers of vars that VARY WITHIN choice set (e.g. deaths, rules)
-vwic <- 2:16
+vwic <- 3:17
 # col numbers of vars that are CONSTANT in each choice set (e.g. gender, income)
-nvwic <- 17:ncol(pdat)
+nvwic <- 18:ncol(pdat)
 
 for (i in vwic) {
   for (j in nvwic) {
@@ -40,13 +46,13 @@ pair.int <- as.matrix(pdat)
 pair.int <- pair.int[,setdiff(1:ncol(pair.int),nvwic)]
 
 
-cv.lasso <- cv.glmnet(x = pair.int[,2:ncol(pair.int)], y = pair.int[,1], family = "binomial", alpha = 1, lambda = NULL)
+# cv.lasso <- cv.glmnet(x = pair.int[,2:ncol(pair.int)], y = pair.int[,1], family = "binomial", alpha = 1, lambda = NULL,weights=pair.int[,2])
 
+# lambda = 0.002547971
 
-
-model <- glmnet(x = pair.int[,2:ncol(pair.int)],y = pair.int[,1], alpha = 1, family = "binomial",
-               # lambda = exp(-6.2))
-                lambda = cv.lasso$lambda.min)
+model <- glmnet(x = pair.int[,3:ncol(pair.int)],y = pair.int[,1], alpha = 1, family = "binomial",weights=pair.int[,2],
+                lambda = 0.002547971,weights=pair.int[,2])
+              #  lambda = cv.lasso$lambda.min)
 plot(cv.lasso)
 coef(model)
 
@@ -58,10 +64,25 @@ keepers <- keepers[which(!keepers %in% "statquo*reject")]
 keepers <- c(names(pdat)[vwic],keepers) %>% unique()
 
 formlasso <- paste0("best ~ ", paste(keepers,collapse=" + ")," + strata(choice)") %>% as.formula
-summary(res <- clogit(formlasso,data=dat))
+summary(res <- clogit(formlasso,data=dat,weights=popwt,method="approximate"))
 
-broom::tidy(res) %>% dplyr::filter(str_detect(term,"avcost"))
+b <- broom::tidy(res) %>% 
+ # dplyr::filter(str_detect(term,"avcost")) %>% 
+  dplyr::filter(!is.na(estimate)) %>% 
+  mutate(star=ifelse(p.value<.05,"*","")) %>% mutate(p.value=round(p.value,3))
+View(b)
 
+b$intx <- str_split_fixed(b$term,":",n=2)[,2]
+
+getwt <- function (x) {
+  if (x!="") {
+    mean(dat[,which(names(dat)==x)]*dat$popwt)
+  } else {1}
+}
+
+b$weighted <- sapply(b$intx,getwt)
+sum(b$estimate*b$weighted)
+b
 ##########################################################################################
 ##########################################################################################
 ##########################################################################################
