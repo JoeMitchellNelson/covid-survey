@@ -32,12 +32,13 @@ states$statelower <- tolower(states$NAME)
 states <- left_join(states,votes)
 states$`2020 winner` %>% summary
 states <- within(states, `2020 winner` <- relevel(`2020 winner`, ref = 1))
+states$`Masks required` <- factor(states$`Masks required`,levels=c("Yes","No"))
 
 
 head(states)
 a <- ggplot(states) +
   geom_sf(aes(fill=`Masks required`),color="white") +
-  scale_fill_manual(values=c("#FF0000","#0000FF")) +
+  scale_fill_manual(values=c("#0000FF","#FF0000")) +
   theme_map()
 
 b <- ggplot(states) +
@@ -46,7 +47,7 @@ b <- ggplot(states) +
   theme_map()
 
 c <- a / b
-
+c
 #ggsave("~/covid-survey/masks2020comparison.png",c)
 
 ####################################################################
@@ -98,6 +99,13 @@ ggsave(paste0("~/covid-survey/idealrules",as.character(colorlist$ideol[i]),".png
 
 ############# counties #######################
 
+nyt <- read.csv("https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv")
+
+nyt$date <- ymd(nyt$date)
+
+nyt <- nyt %>% group_by(fips) %>% summarise(firstcase=min(date))
+nyt$fips <- ifelse(str_length(nyt$fips)==4,paste0("0",nyt$fips),as.character(nyt$fips))
+
 counties <- get_acs(geography = "county",
                   year=2018,
                   cache_table=T,
@@ -106,13 +114,18 @@ counties <- get_acs(geography = "county",
                   geometry=T,
                   shift_geo=T)
 
+counties <- left_join(counties,nyt,by=c("GEOID"="fips"))
+
 counties$`Any Covid-19 cases?` <- ifelse(counties$NAME=="Los Angeles County, California", "No","Yes")
 
 counties$`Any Covid-19 cases?` <- as.factor(counties$`Any Covid-19 cases?`)
 
 ggplot(counties) +
-  geom_sf(aes(fill=`Any Covid-19 cases?`),color="white",size=.01) +
-  scale_fill_manual(values=c("yellow","red")) +  
+  geom_sf(aes(fill=(18691-as.numeric(firstcase))),color=NA,size=.001,show.legend=F) +
+  scale_fill_viridis_c(direction=1) +
   theme_map()
 
-ggsave("~/covid-survey/presentations/figures/countieswithcovid.png",last_plot())
+ggsave("~/covid-survey/presentations/figures/whencovidcame.png",last_plot())
+
+
+#ggsave("~/covid-survey/presentations/figures/countieswithcovid.png",last_plot())

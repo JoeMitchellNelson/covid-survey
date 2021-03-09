@@ -1,7 +1,8 @@
 ---
 title: "Lost lives vs. lost livelihoods"
 author: "Joe Mitchell-Nelson and Trudy Ann Cameron"
-date: "`r format(Sys.time(), '%d %B, %Y')`"
+#date: "`r format(Sys.time(), '%d %B, %Y')`"
+institute: "<br><br><font size=4>Research funding:  The University of Oregon Department of Economics, a University of Oregon COVID-19 Research Innovation Award, the continuing support of the R.F. Mikesell Foundation</font>"
 header-includes:
  - \usepackage{cases}
  - \usepackage{placeins}
@@ -118,15 +119,13 @@ theme_axes <- theme_void() + theme(
 
 --
 
-US counties without Covid-19
-
---
+The spread of Covid-19 across the US
 
 <center>
-<img src="figures/countieswithcovid.png" alt="drawing" width="500" align="center"/>
+<img src="figures/whencovidcame.png" alt="drawing" width="500" align="center"/>
 </center>
 
-
+Darker counties had first Covid-19 case more recently
 ---
 
 # Research questions
@@ -182,7 +181,7 @@ US counties without Covid-19
 
 --
 
-  - Short update on local and national covid conditions
+  - Short update on county and national covid conditions
   
 --
 
@@ -208,14 +207,14 @@ US counties without Covid-19
 
 --
 
-- 1,029 participants from Washington, Oregon and California
+- 1,029 participants from Washington, Oregon and California, collected Jan 13 - Feb 16
 
 ---
 
 # Sample policy
 
 <center>
-<img src="figures/choice1.png" alt="drawing" width="270" align="center"/>
+<img src="figures/choicepart1.png" alt="drawing" width="700" align="center"/>
 </center>
 
 ---
@@ -223,53 +222,62 @@ US counties without Covid-19
 # Sample policy
 
 <center>
-<img src="figures/restr-example.png" alt="drawing" width="400" align="center"/>
+<img src="figures/choicepart2.png" alt="drawing" width="700" align="center"/>
 </center>
 
 ---
 
-<!-- # The role of culture -->
+# Sample policy
 
-<!-- -- -->
+<center>
+<img src="figures/choicepart3.png" alt="drawing" width="700" align="center"/>
+</center>
 
-<!-- - Washing facilities in Pakistan for Pathan tribeswomen (Dasgupta, 1995) -->
+---
 
-<!-- -- -->
+# Sample policy
 
-<!--   - Women walked 8 km each way to wash clothes each week -->
+<center>
+<img src="figures/choicepart4.png" alt="drawing" width="700" align="center"/>
+</center>
+---
 
-<!-- -- -->
-
-<!-- - Choose not to use washing facilities. Why? -->
-
-<!-- -- -->
-
-<!--   - Washing at the river provided a day-long opportunity for socializing -->
-
-<!-- -- -->
-
-<!-- - Knowledge of local culture and conditions can make or break a project -->
-
-<!--   - This includes cultural attitudes and practices of consumers -->
-
-<!-- -- -->
-
-<!-- - Hypothesis: Culturally close project managers will be more sensitive to local culture and will have better project outcomes, all else equal. -->
-
-<!-- --- -->
 
 # Model
 
-Individual $i$ chooses alternative (policy) $j \in \{A,B,N\}$, each with attributes (cases, deaths, restrictions, costs) $k \in 1,...,K$ such that
+Individual $i$ chooses alternative (policy) $j \in \{A,N\}$, each with attributes (cases, deaths, restrictions, costs) $k \in 1,...,K$ such that
 
 
-$V_{ij} = max\{V_{iA},V_{iB},V_{iN}\}$
+$V_{ij} = max\{V_{iA},V_{iN}\}$
 
 where
 
 $V_{ij} = \beta_1 \text{deaths}_{jk} + \beta_2\text{cases}_{jk} + \beta_3\text{cost}_{jk} + \sum_{k=4}^{13} \beta_k \text{restriction}_{jk} + \beta_NI_{j=N} + \eta_{ij}$
 
+--
 
+If $i$ chooses $A$, then we know:
+
+$V_{iA} - V_{iN} = \Delta X_{AN}'\beta + \eta_{iA} - \eta_{iN} > 0$ 
+
+
+If $\eta_{ij}$ is distributed Type I extreme value, then $\eta_{iA} - \eta_{iN}$ has a logistic distribution, so we use conditional logit to estimate the parameters in the indirect utility function.
+
+---
+
+# A note on sampling
+
+--
+
+- Our sample is stratified to be representative in terms of age, race, gender and income
+
+--
+
+- Individuals are weighted so that sample is representative in terms of state of residence
+
+--
+
+- Demographic and location data on non-respondents permits selection correction
 
 ---
 
@@ -299,15 +307,24 @@ $V_{ij} = \beta_1 \text{deaths}_{jk} + \beta_2\text{cases}_{jk} + \beta_3\text{c
 
 ---
 
-# Dimensions of heterogeneity
+# Political ideology
+
+--
 
  <center>
-<img src="figures/ideologytable.png" alt="drawing" width="410" align="center"/>
+<img src="figures/masks2020comparisonquiz.png" alt="drawing" width="500" align="center"/>
 </center>
 
 ---
 
+# Political ideology
 
+
+ <center>
+<img src="figures/masks2020comparison.png" alt="drawing" width="500" align="center"/>
+</center>
+
+---
 
 # Ideal rules
 
@@ -349,114 +366,166 @@ $V_{ij} = \beta_1 \text{deaths}_{jk} + \beta_2\text{cases}_{jk} + \beta_3\text{c
 
 ---
 
-#Data: Project quality
+# Dimensions of heterogeneity
 
-<center>
-<img src="figures/IEG_dist.png" alt="drawing" width="600" align="center"/>
+ <center>
+<img src="figures/ideologytable.png" alt="drawing" width="410" align="center"/>
 </center>
 
-Distribution of IEG ratings in estimating sample.
+---
+
+# Trade offs
+
+In a county with a population of 50,000...
+
+--
+
+For conservatives:
+
+- A life is worth about 232 jobs (lives vs. livelihoods)
+
+- Keeping church fully open is worth about 8 or 9 lives
+
+--
+
+For liberals:
+
+- Keeping theaters and arts spaces open is worth about 2 lives
+
+- Keeping schools open is worth about 1.5 lives
+
+--
+
+For moderates:
+
+- Keeping gyms open is worth about 90 cases
 
 ---
 
-#Data: Institutional quality
+# Other results
 
-- Measure of institutional quality is Country Policy and Institutional Assessment (CPIA)
-
-- Four subscores:
+- You've had covid -> more concerned with cases
 
 --
-  - Economic management 
-  - Structural policies
-  - Policies for social inclusion and equity
-  - Public sector management and institutions
-  
+
+- Friend/family had covid -> nothing
+
 --
 
-- CPIA is a widely used measure of institutional quality in the literature examining the effectiveness of foreign aid
+- You *or* friend/family has comorbidities -> more concerned with cases
+
+--
+
+- Age 45-54 are the least concerned with cost/unemployment
 
 ---
 
-#Data: Institutional quality
+# Other dimensions 
 
-<center>
-<img src="figures/CPIA_dist.png" alt="drawing" width="600" align="center"/>
-</center>
+- Federal unemployment insurance
 
-Distribution of CPIA ratings in estimating sample.
+- Household members by age group
 
----
+- Race/ethnicity, gender
 
-# Data: Cultural proximity
+- Rural/urban, state effects
 
-I use a two-step process to construct a novel measure of the cultural overlap between TTLs and recipient countries.
+- Income (household/county)
 
---
-    
-**Step 1**: Use the global distribution of each surname to construct a probabilistic estimate of each TTL's ancestral country. 
+- Subjective perception of $R_0$
 
-Data from **forebears.io**
+- Housing tenure and duration
 
---
-
-How well does forebears.io perform?
-
---
-
-- *Roy*: India (72%), followed by Bangladesh, and Canada
-- *Chaturvedi*: India (92%), followed by U.A.E., and U.S.
-- *Burlando*: Italy (66%), followed by Argentina, and U.S.
+- Employment status
 
 ---
 
-# Data: Cultural proximity
-
-Spolaore and Wacziarg (2009, 2018) developed a measure of **ancestral distance** between countries.
+# Conclusion
 
 --
-   
-**Step 2**: find the weighted average of the ancestral distance between 
-- Each TTL's likely home countries
-- The country in which their project takes place
+
+- Research innovations: 
+
+  - County-level public policies, rather than private choices
+  - Multiple categories of benefits and costs
+  - Digestible visual display of complex policy attributes
+  - Personalizing choice scenarios by county characteristics
+  - Correcting consumer panel for selection on unobservables
+  - (Delivering tailored, randomized designs anonymously)
 
 --
-   
-*Negative* of this result is the estimated **cultural proximity** between the TTL and the recipient country.
 
-<!-- --- -->
-<!-- # Data: Cultural proximity -->
+- Substantive results concerning pandemic policies:
 
-<!-- <center> -->
-<!-- Burlandos of the world in % -->
-
-<!-- <img src="figures/map3.png" alt="drawing" width="900" align="center"/> -->
-<!-- </center> -->
-
-
-<!-- --- -->
-<!-- # Data: Cultural proximity -->
-
-<!-- <center> -->
-<!-- Ancestral distance to Brazil  -->
-
-<!-- <img src="figures/map4.png" alt="drawing" width="900" align="center"/> -->
-<!-- </center> -->
-
+  - Covid-19 probably not last pandemic
+  - It's more than just lives vs. livelihoods
+  - Which tradeoffs matter to different constituencies
+  - Which cost measures are most salient ($, unemployment, and restrictions)
+  - Which benefit measures are most salient (avoided cases, avoided premature death)
 
 ---
 
-# Data: Cultural proximity
+# Everything
 
-<center>
-<img src="figures/burlando_diagram.png" alt="drawing" width="700" align="center"/>
-</center>
+External data by county and ZIP code
 
-Alfredo Burlando's estimated cultural proximity to Brazil
+Historical daily counts of COVID-19 cases and deaths, by county
+Bureau of Labor Statistics unemployment estimates, by county
+Census sociodemographic characteristics, by county and by ZCTA
+Census employment sectors, by ZCTA
+Urban-rural population proportions, by county and by ZCTA
+Presidential election voting patterns in 2016, by county
 
-\begin{align}
--(0.66 \times 0.62 + 0.2 \times 1.02 + 0.14 \times 1.4) = -0.81
-\end{align}
+Screening questions (linked by zip code to external data)
+State of residence: CA, OR, WA
+Metadata: Operating system (mobile, computer)
+Age bracket
+Gender
+Race
+Household income bracket
+ZIP code (thus county, county population)
 
+
+Subjective county preparedness for pandemic
+Subjective burden of past pandemic restrictions
+Answers to several comprehension questions
+Millisecs per survey page and per word
+Clicks on page (per pop-up option)
+Dependence on restricted activities/services
+   For income, for access
+Extra Federal weekly unemployment benefits
+   $0, 100, 200, 300, 400
+Certainty about stated policy choices
+Reasons for choosing No Policy
+For stated "ideal" restrictions
+   What maximum cases tolerated?
+   What maximum deaths tolerated?
+   What maximum unempl rate tolerated?
+Household members by age group
+   0-1, 2-5, 6-12, 13-17, 18-64, 65+
+Marital status
+Family or friends institutionalized?
+Dependence on public transit pre-COVID
+Duration of residence in county
+   <2, 3-5, 6-10, >10 years
+Expected future stay in county
+   <2, 3-5, 6-10, >10 years  
+List of specific personal comorbidities
+List of comorbidities for family, friends
+Subjective perception of R0
+Vulnerability by group membership
+Subjective access to medical care
+Expected duration of pandemic
+Race, Ethnicity
+Own current employment status
+Personal housing tenure
+Educational attainment
+Household income reduced by COVID?
+Household jobs lost to COVID?
+Lost jobs with recall expected?
+Assessment of Federal govt response?
+Expectations about new administration?
+Subjective perception of researcher bias?
 
 ---
 
