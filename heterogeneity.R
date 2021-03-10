@@ -80,14 +80,14 @@ dat <- dat %>% dplyr::mutate(nocommute = pzipiconstr + pzipiagric + pzipiartent 
 
 summary(main <- clogit(best ~
                          mabsdeaths*lassorpfl + mabscases*lassorpfl +
-                         avcost*feduiany*lassorpfl + 
-                         unempl*feduiany*lassorpfl +
+                         avcost*lassorpfl + 
+                         unempl*lassorpfl +
                          
-                         I(rule1)*lassorpfl + I(rule2)*lassorpfl +
-                         I(rule3)*lassorpfl + I(rule4)*lassorpfl +
-                         I(rule5)*lassorpfl + I(rule6)*lassorpfl +
-                         I(rule7)*lassorpfl + I(rule8)*lassorpfl +
-                         I(rule9)*lassorpfl + I(rule10)*lassorpfl +
+                         rule1*lassorpfl + rule2*lassorpfl +
+                         rule3*lassorpfl + rule4*lassorpfl +
+                         rule5*lassorpfl + rule6*lassorpfl +
+                         rule7*lassorpfl + rule8*lassorpfl +
+                         rule9*lassorpfl + rule10*lassorpfl +
                          
                          
                          statquo*lassorpfl +
@@ -102,11 +102,11 @@ summary(main2 <- clogit(best ~
                           mabsdeaths*lassorpfl + mabscases*lassorpfl +
                           unempl*lassorpfl +
                           
-                          factor(rule1)*lassorpfl + factor(rule2)*lassorpfl +
-                          factor(rule3)*lassorpfl + factor(rule4)*lassorpfl +
-                          factor(rule5)*lassorpfl + factor(rule6)*lassorpfl +
-                          factor(rule7)*lassorpfl + factor(rule8)*lassorpfl +
-                          factor(rule9)*lassorpfl + factor(rule10)*lassorpfl +
+                          rule1*lassorpfl + rule2*lassorpfl +
+                          rule3*lassorpfl + rule4*lassorpfl +
+                          rule5*lassorpfl + rule6*lassorpfl +
+                          rule7*lassorpfl + rule8*lassorpfl +
+                          rule9*lassorpfl + rule10*lassorpfl +
                           
                           
                           statquo*lassorpfl +
@@ -118,11 +118,11 @@ summary(main3 <- clogit(best ~
                           mabsdeaths*lassorpfl + mabscases*lassorpfl +
                           avcost*lassorpfl + 
                           
-                          factor(rule1)*lassorpfl + factor(rule2)*lassorpfl +
-                          factor(rule3)*lassorpfl + factor(rule4)*lassorpfl +
-                          factor(rule5)*lassorpfl + factor(rule6)*lassorpfl +
-                          factor(rule7)*lassorpfl + factor(rule8)*lassorpfl +
-                          factor(rule9)*lassorpfl + factor(rule10)*lassorpfl +
+                          rule1*lassorpfl + rule2*lassorpfl +
+                          rule3*lassorpfl + rule4*lassorpfl +
+                          rule5*lassorpfl + rule6*lassorpfl +
+                          rule7*lassorpfl + rule8*lassorpfl +
+                          rule9*lassorpfl + rule10*lassorpfl +
                           
                           
                           statquo*lassorpfl +
@@ -131,15 +131,15 @@ summary(main3 <- clogit(best ~
 ))
 
 
-# t1 <- stargazer(main,main2,main3,keep.stat = "n",type="text") %>% paste(collapse="\n")
-# 
-# for (i in 1:nrow(varlabs)) {
-#   if(str_detect(t1,paste0(" ",varlabs$variable[i]))) {
-#    t1 <- str_replace_all(t1,varlabs$variable[i],varlabs$label[i])
-#   }
-# }
-# 
-# cat(t1)
+t1 <- stargazer(main,main2,main3,keep.stat = "n",type="latex") %>% paste(collapse="\n")
+
+for (i in 1:nrow(varlabs)) {
+  if(str_detect(t1,paste0("",varlabs$variable[i]))) {
+   t1 <- str_replace_all(t1,varlabs$variable[i],varlabs$label[i])
+  }
+}
+
+cat(t1)
 
 res <- broom::tidy(main) %>% 
   dplyr::filter(!str_detect(term,"lassorp") & !is.na(estimate)) %>% 
@@ -771,17 +771,98 @@ summary(ideolmodelfedui <- clogit(best ~
                              ,weights=popwt,method="approximate"
 ))
 
-stargazer(ideolmodel,ideolmodelrp,ideolmodelfedui,ideolmodelrpfedui,type="text",omit="lassorpfl")
+############### ideol without fedui table ###############
 
-res <- broom::tidy(main2) %>% 
-  dplyr::filter(!str_detect(term,"lassorp") & !is.na(estimate)) %>% 
-  mutate(star=ifelse(p.value<0.05,"*","")) %>% 
-  dplyr::select(star,everything())
+ideolmodelrp.s <- summary(ideolmodelrp)$coefficients %>% as.data.frame() %>% rownames_to_column(var="term") %>% 
+  dplyr::filter(! str_detect(term,"lassorpfl"))
 
-res$term <- str_remove_all(res$term,"ideol2")
 
-View(res)
-stargazer(main2,type="text")
+
+concoef <- ideolmodelrp.s %>% dplyr::filter(str_detect(term,"conservative") )
+modcoef <- ideolmodelrp.s %>% dplyr::filter(str_detect(term,"moderate") )
+libcoef <- ideolmodelrp.s %>% dplyr::filter(str_detect(term,"liberal") )
+
+
+
+fake <- lm(best ~ mabsdeaths + mabscases + avcost + unempl + 
+                     rule1 + rule2 + rule3 + rule4 + rule5 + rule6 +
+                     rule7 + rule8 + rule9 + rule10 + statquo + 0,data =ideoldat
+                   )
+
+t2 <- stargazer(fake,fake,fake,type="latex",
+         # omit=":lassorpfl",
+          coef = list(
+            libcoef$coef,
+            modcoef$coef,
+            concoef$coef
+          ),
+          # standard errors
+          se = list(
+            libcoef$`robust se`,
+            modcoef$`robust se`,
+            concoef$`robust se`
+          ),
+          column.labels = c("Liberal", "Moderate","Conservative"),
+          keep.stat="n",
+          t.auto = T)
+
+t2 <- paste(t2,collapse="\n")
+
+for (i in 1:nrow(varlabs)) {
+  if(str_detect(t2,paste0("",varlabs$variable[i]))) {
+    t2 <- str_replace_all(t2,varlabs$variable[i],varlabs$label[i])
+  }
+}
+
+cat(t2)
+
+
+############## ideol with fedui table ###########################
+
+ideolmodelrpfedui.s <- summary(ideolmodelrpfedui)$coefficients %>% as.data.frame() %>% rownames_to_column(var="term") %>% 
+  dplyr::filter(! str_detect(term,"lassorpfl"))
+
+
+
+concoeffedui <- ideolmodelrpfedui.s %>% dplyr::filter(str_detect(term,"conservative") )
+modcoeffedui <- ideolmodelrpfedui.s %>% dplyr::filter(str_detect(term,"moderate") )
+libcoeffedui <- ideolmodelrpfedui.s %>% dplyr::filter(str_detect(term,"liberal") )
+
+
+
+fakefedui <- lm(best ~ mabsdeaths + mabscases + avcost + avcost:feduiany + unempl + unempl:feduiany + 
+             rule1 + rule2 + rule3 + rule4 + rule5 + rule6 +
+             rule7 + rule8 + rule9 + rule10 + statquo + 0,data =ideoldat
+)
+
+t3 <- stargazer(fakefedui,fakefedui,fakefedui,type="latex",
+                 omit="^feduiany$",
+                coef = list(
+                  libcoeffedui$coef,
+                  modcoeffedui$coef,
+                  concoeffedui$coef
+                ),
+                # standard errors
+                se = list(
+                  libcoeffedui$`robust se`,
+                  modcoeffedui$`robust se`,
+                  concoeffedui$`robust se`
+                ),
+                column.labels = c("Liberal", "Moderate","Conservative"),
+                keep.stat="n",
+                t.auto = T)
+
+t3 <- paste(t3,collapse="\n")
+
+for (i in 1:nrow(varlabs)) {
+  if(str_detect(t3,paste0("",varlabs$variable[i]))) {
+    t3 <- str_replace_all(t3,varlabs$variable[i],varlabs$label[i])
+  }
+}
+
+cat(t3)
+
+
 
 ideolrp <- dat %>% group_by(ideol) %>% summarise(meanrplasso = mean(lassorp),
                                                  meanrplassofl = mean(lassorpfl),
