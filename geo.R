@@ -172,3 +172,39 @@ jobs2 <- jobs %>% dplyr::filter(GEOID %in% latlong_final$zip | GEOID %in% latlon
 write.csv(jobs2,"~/covid-survey/data/zipcodes_jobs.csv")
 write.csv(census,"~/covid-survey/data/zipcodes_demo.csv")
 write.csv(votes,"~/covid-survey/data/county_votes.csv")
+
+
+################# county match? #######################
+
+dat <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/variables_for_selection_models.dta") %>% dplyr::select(ResponseId,LocationLatitude,LocationLongitude)
+counties <- st_read("~/covid-survey/data/counties/cb_2018_us_county_500k.shp", quiet = TRUE)
+
+###### match lat/long to county
+
+latlong_sf <- dat %>%
+  dplyr::filter(!is.na(LocationLatitude)) %>% 
+  st_as_sf(coords = c("LocationLongitude", "LocationLatitude"), crs = st_crs(counties))
+
+ggplot(latlong_sf) +
+  geom_sf()
+
+intersected <- st_intersects(latlong_sf, counties)
+
+
+latlong_final <- latlong_sf %>%
+  mutate(intersection = as.integer(intersected),
+         fips = if_else(is.na(intersection), "",
+                       as.character(counties$GEOID[intersection])))
+
+dat <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.csv") %>% dplyr::select(ResponseId,countyname) %>% unique()
+
+cnames <- counties %>% st_drop_geometry() %>% dplyr::filter(STATEFP %in% c("06","41","53")) %>%  dplyr::select(GEOID,NAME)
+
+dat <- left_join(dat,cnames,by=c("countyname"="NAME"))
+dat <- left_join(dat,latlong_final)
+
+dat <- dat %>% mutate(cntymatch= ifelse(GEOID==fips,1,0))
+
+dat2 <- dat %>% group_by(ResponseId) %>% summarise(countymatch = max(cntymatch))
+
+#write.csv(dat2,"C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID-shared/intermediate-files/countymatch.csv")

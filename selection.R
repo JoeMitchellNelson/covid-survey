@@ -9,14 +9,21 @@ p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
 p_load(glmnet,tibble,broom,caret,h2o)
 
 
-dat <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/variables_for_selection_models.dta")
-dat$countypop <- dat$countypop/1000
+dat <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/variables_for_selection_models.dta") %>% dplyr::select(-LocationLatitude,-LocationLongitude)
 
 dat <- dat[,!str_detect(names(dat),"^On")]
 
 dat <- dat %>% dplyr::select(ResponseId,eligible,complete,popwt,everything())
 
-exdat <- dat
+# raw <- read.csv("~/covid-survey/data/qualtricsraw.csv")[-c(1:2),] %>% dplyr::select(StartDate,ResponseId)
+# raw$StartDate <- raw$StartDate %>% ymd_hms() %>% as_date 
+# raw$StartDate <- cut(raw$StartDate,5)
+# raw2 <- model.matrix( ~ StartDate,raw) %>% as.data.frame()
+# names(raw2)[2:5] <- c("period1","period2","period3","period4")
+# raw2$ResponseId <- raw$ResponseId
+# dat <- left_join(dat,raw2[,-1])
+
+exdat <- dat %>% dplyr::select(-ResponseId)
 
 for (i in 5:ncol(dat)) {
   for (j in 5:ncol(dat)) {
@@ -54,12 +61,13 @@ bestweight <- exdat %>% dplyr::select(complete,popwt)
 
 ################### Ready for LASSO ###########################
 
-set.seed(1234)
+set.seed(123)
 
 cv.lasso <- cv.glmnet(x = exmat,y = bestweight[,1], alpha = 1, family= "binomial",
                       weights=bestweight[,2],
                       lambda = NULL)
 
+plot(cv.lasso)
 
 model <- glmnet(x = exmat,y = bestweight[,1], alpha = 1, family = "binomial",weights=bestweight[,2],
                 lambda = cv.lasso$lambda.min)
