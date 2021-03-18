@@ -208,3 +208,47 @@ dat <- dat %>% mutate(cntymatch= ifelse(GEOID==fips,1,0))
 dat2 <- dat %>% group_by(ResponseId) %>% summarise(countymatch = max(cntymatch))
 
 #write.csv(dat2,"C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID-shared/intermediate-files/countymatch.csv")
+
+
+############# county ethnic fractionalization #################
+
+racevars <- vars$name[which(str_detect(vars$name,"B02001_"))]
+racenames <- vars$label[which(str_detect(vars$name,"B02001_"))] %>% str_remove_all("Estimate!!") %>% str_remove_all("!!")
+
+little <- vars %>% dplyr::filter(str_detect(name,"B02001_"))
+
+little$label %>% str_remove_all("Estimate!!Total!!") %>% cat()
+
+census_data <- get_acs(geography = "county",
+                       state=c("OR","CA","WA"),
+                      year=2018,
+                      cache_table=T,
+                      variables=racevars,
+
+                      geometry=T,                
+                      shift_geo=F,
+                      output="wide")
+
+census_data <- census_data %>% mutate(ethfraccnty = 1 - (B02001_002E/B02001_001E)^2 - 
+                                        (B02001_003E/B02001_001E)^2 - 
+                                        (B02001_004E/B02001_001E)^2 - 
+                                        (B02001_005E/B02001_001E)^2 - 
+                                        (B02001_006E/B02001_001E)^2 - 
+                                        (B02001_007E/B02001_001E)^2 - 
+                                        (B02001_008E/B02001_001E)^2)
+
+ethnic <- census_data %>%  st_drop_geometry() %>% dplyr::select(GEOID,NAME,B02001_001E,ethfraccnty)
+ethnic <- ethnic %>% mutate(countyname = str_remove(NAME," County,.{1,50}"))
+names(ethnic)[which(names(ethnic)=="GEOID")] <- "countyfips"
+ethnic <- ethnic %>% dplyr::select(countyname,countyfips,ethfraccnty)
+
+ethnic$state <- ifelse(str_detect(ethnic$countyfips,"^06"),"CA",
+                                  ifelse(str_detect(ethnic$countyfips,"^53"),"WA","OR"))
+
+#write.csv(ethnic,"~/covid-survey/data/countyethfrac.csv")
+
+ggplot(census_data) +
+  geom_sf(aes(fill=ethfraccnty)) +
+  scale_fill_viridis_c()
+
+

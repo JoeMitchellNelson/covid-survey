@@ -728,17 +728,17 @@ summary(ideolmodelrpfedui <- clogit(best ~
                                  conservative_deaths*lassorpfl + conservative_cases*lassorpfl + conservative_cost*feduiany*lassorpfl + conservative_unempl*feduiany*lassorpfl + 
                                  conservative_rule1*lassorpfl + conservative_rule2*lassorpfl + conservative_rule3*lassorpfl + conservative_rule4*lassorpfl + 
                                  conservative_rule5*lassorpfl + conservative_rule6*lassorpfl + conservative_rule7*lassorpfl + conservative_rule8*lassorpfl + 
-                                 conservative_rule9*lassorpfl + conservative_rule10*lassorpfl + conservative_statquo*lassorpfl + 
+                                 conservative_rule9*lassorpfl + conservative_rule10*lassorpfl + conservative_statquo*feduiany*lassorpfl + 
                                  
                                  moderate_deaths*lassorpfl + moderate_cases*lassorpfl + moderate_cost*feduiany*lassorpfl + moderate_unempl*feduiany*lassorpfl + 
                                  moderate_rule1*lassorpfl + moderate_rule2*lassorpfl + moderate_rule3*lassorpfl + moderate_rule4*lassorpfl + 
                                  moderate_rule5*lassorpfl + moderate_rule6*lassorpfl + moderate_rule7*lassorpfl + moderate_rule8*lassorpfl + 
-                                 moderate_rule9*lassorpfl + moderate_rule10*lassorpfl + moderate_statquo*lassorpfl + 
+                                 moderate_rule9*lassorpfl + moderate_rule10*lassorpfl + moderate_statquo*feduiany*lassorpfl + 
                                  
                                  liberal_deaths*lassorpfl + liberal_cases*lassorpfl + liberal_cost*feduiany*lassorpfl + liberal_unempl*feduiany*lassorpfl + 
                                  liberal_rule1*lassorpfl + liberal_rule2*lassorpfl + liberal_rule3*lassorpfl + liberal_rule4*lassorpfl + 
                                  liberal_rule5*lassorpfl + liberal_rule6*lassorpfl + liberal_rule7*lassorpfl + liberal_rule8*lassorpfl + 
-                                 liberal_rule9*lassorpfl + liberal_rule10*lassorpfl + liberal_statquo*lassorpfl + 
+                                 liberal_rule9*lassorpfl + liberal_rule10*lassorpfl + liberal_statquo*feduiany*lassorpfl + 
                                  
                                  MISSING_deaths*lassorpfl + MISSING_cases*lassorpfl + MISSING_cost*feduiany*lassorpfl + MISSING_unempl*feduiany*lassorpfl + 
                                  MISSING_rule1*lassorpfl + MISSING_rule2*lassorpfl + MISSING_rule3*lassorpfl + MISSING_rule4*lassorpfl + 
@@ -749,6 +749,7 @@ summary(ideolmodelrpfedui <- clogit(best ~
                                ,weights=popwt,method="approximate"
 ))
 
+res <- broom
 
 summary(ideolmodelfedui <- clogit(best ~
                                
