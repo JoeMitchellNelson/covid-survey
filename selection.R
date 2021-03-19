@@ -14,6 +14,7 @@ dat <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/interm
 dat <- dat[,!str_detect(names(dat),"^On")]
 
 dat <- dat %>% dplyr::select(ResponseId,eligible,complete,popwt,everything())
+dat$countypop <- dat$countypop/1000
 
 # raw <- read.csv("~/covid-survey/data/qualtricsraw.csv")[-c(1:2),] %>% dplyr::select(StartDate,ResponseId)
 # raw$StartDate <- raw$StartDate %>% ymd_hms() %>% as_date 
@@ -135,7 +136,7 @@ demeans <- data.frame(ResponseId = dat$ResponseId,
 
 ggplot() +
   geom_vline(xintercept=0) +
-  geom_density(data=demeans,aes(x=lassorpfl),fill="green",alpha=.3) + 
+  geom_density(data=demeans[which(demeans$complete==0),],aes(x=lassorpfl),fill="green",alpha=.3) + 
   geom_density(data=demeans[which(demeans$complete==1),],aes(x=lassorpfl1se),fill="red",alpha=.3)
   
 

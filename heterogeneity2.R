@@ -59,14 +59,15 @@ dat <- left_join(dat,cmatch)
 dat$ideol <- dat$ideol %>% str_remove_all(" ") %>% as.factor()
 
 dat <- left_join(dat,ethnic)
+
 }
 
 
 ####### functions to format data #############
 
-#df = dat
-#fac="income"
-
+df = dat
+fac="threealts2"
+fedint=T
 getsummary <- function (fac,df,fedint=T) {
   
   df <- df %>% dplyr::filter(!is.na(eval(as.symbol(fac))))
@@ -83,7 +84,7 @@ getsummary <- function (fac,df,fedint=T) {
           "rule1","rule2","rule3","rule4","rule5","rule6",
           "rule7","rule8","rule9","rule10","statquo")
   
-  newdf <- df %>% dplyr::select("best","choice",all_of(bv),all_of(fac),"popwt","lassorpfl","feduiany")
+  newdf <- df %>% dplyr::select("best","choice",all_of(bv),all_of(fac),"popwt","popwt2","lassorpfl","feduiany")
   
   allv <- c()
   for (i in 1:length(levs)) {
@@ -104,7 +105,7 @@ getsummary <- function (fac,df,fedint=T) {
   }
   form3 <- paste0("best ~",form2,"+ strata(choice)") %>% as.formula
   
-  summary(clogit(form3,data=newdf,weights=popwt,method="approximate"))
+  summary(clogit(form3,data=newdf,weights=popwt2,method="approximate"))
 }
 
 maketable <- function (fac,df,fedint=T,drop=c("MISSING")) {
@@ -226,6 +227,9 @@ dat$education <- factor(dat$education,levels=c("Noncollege","College","MISSING")
 dat$income <- ifelse(dat$inccont > 75,"Morethan75","Lessthan75")
 dat$income <- factor(dat$income)
 
+dat$threealts2 <- ifelse(dat$threealts==0,"Alts2","Alts3") %>% as.factor()
+
+
 ideoltable <- maketable(fac="ideol2", 
           df=dat, 
           fedint = T, 
@@ -272,6 +276,8 @@ eductable <- maketable(fac="education",
                        drop="MISSING") %>% 
   fixnames() 
 
+write(eductable,file="~/covid-survey/tables/educationtable.bib")
+
 
 incometable <- maketable(fac="income", 
           df=dat, 
@@ -280,6 +286,13 @@ incometable <- maketable(fac="income",
   fixnames()
 
 write(incometable,file="~/covid-survey/tables/incometable.bib")
+
+
+maketable(fac="threealts2", 
+          df=dat[which(dat$threealts==1 | dat$choiceofperson %in% c(1,2)),], 
+          fedint = T, 
+          drop="MISSING") %>% 
+  fixnames() %>% cat()
 
 ####################################################
 ##################### Main results #################
@@ -326,7 +339,7 @@ main1 <- clogit(best ~
                           
                           statquo*lassorpfl +
                           strata(choice),data=dat
-                         ,weights=popwt,method="approximate"
+                         ,weights=popwt2,method="approximate"
 )
 
 main2 <- clogit(best ~
@@ -341,7 +354,7 @@ main2 <- clogit(best ~
                   
                   statquo*lassorpfl +
                   strata(choice),data=dat
-                ,weights=popwt,method="approximate"
+                ,weights=popwt2,method="approximate"
 )
 
 main3 <- clogit(best ~
@@ -356,7 +369,7 @@ main3 <- clogit(best ~
                   
                   statquo*lassorpfl +
                   strata(choice),data=dat
-                ,weights=popwt,method="approximate"
+                ,weights=popwt2,method="approximate"
 )
 
 }
@@ -566,4 +579,25 @@ stargazer(ethfrac1,
 
 ethfractable <- maketable2("ideol2",dat,T,"MISSING") %>% fixnames2()
 write(ethfractable,file="~/covid-survey/tables/ethfractable.bib")
+
+
+
+main1 <- clogit(best ~
+                  mabsdeaths*lassorpfl*threealts + mabscases*lassorpfl*threealts +
+                  unempl*lassorpfl*threealts + avcost*lassorpfl*threealts +
+                  
+                  rule1*lassorpfl*threealts + rule2*lassorpfl*threealts +
+                  rule3*lassorpfl*threealts + rule4*lassorpfl*threealts +
+                  rule5*lassorpfl*threealts + rule6*lassorpfl*threealts +
+                  rule7*lassorpfl*threealts + rule8*lassorpfl*threealts +
+                  rule9*lassorpfl*threealts + rule10*lassorpfl*threealts +
+                  
+                  statquo*lassorpfl*threealts +
+                  strata(choice),data=dat
+                ,weights=popwt,method="approximate"
+)
+summary(main1)
+
+
+
 
