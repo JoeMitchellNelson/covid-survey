@@ -8,8 +8,22 @@ p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
 
 p_load(glmnet,tibble,broom,caret,h2o)
 
+completes <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.csv") %>% 
+  # dplyr::filter(rejectonly==0) %>% 
+  dplyr::filter(Durationinseconds > 360) %>% 
+  dplyr::filter(choiceofperson %in% 1:2) %>% 
+  group_by(ResponseId) %>% 
+  mutate(rejectever = sum(rejectonly)) %>% 
+  ungroup() %>% 
+  dplyr::filter(rejectever==0) %>%
+  dplyr::select(ResponseId) %>% 
+  unique()
+
+completes <- completes$ResponseId %>% as.character()
 
 dat <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/variables_for_selection_models.dta") %>% dplyr::select(-LocationLatitude,-LocationLongitude)
+
+dat$complete <- ifelse(dat$ResponseId %in% completes,1,0)
 
 dat <- dat[,!str_detect(names(dat),"^On")]
 
@@ -135,13 +149,20 @@ demeans <- data.frame(ResponseId = dat$ResponseId,
                       lassorpfl1se = (predict(d) - mean(predict(d)))/sd(predict(d)))
 
 ggplot() +
-  geom_vline(xintercept=0) +
-  geom_density(data=demeans[which(demeans$complete==0),],aes(x=lassorpfl),fill="green",alpha=.3) + 
-  geom_density(data=demeans[which(demeans$complete==1),],aes(x=lassorpfl1se),fill="red",alpha=.3)
+  geom_vline(xintercept=0,linetype="dashed",color="grey50") +
+  geom_density(data=demeans,aes(x=lassorpfl,group=complete,fill=factor(complete)),alpha=.5,color=NA,bw=.2) + 
+  scale_fill_manual(values=c("red","forestgreen"),labels = c("Non-response", "Response")) +
+  scale_color_manual(values="black") +
+  geom_density(data=demeans,aes(x=lassorpfl),fill=NA,color="black",alpha=.3,bw=.2) +
+  labs(x="Demeaned response propensity",y="Density",fill="") +
+  lims(x=c(-4,4)) +
+  theme_minimal()
   
 
 write.csv(demeans,"~/covid-survey/demeanrp-lasso.csv")
 write.csv(demeans,"C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID-shared/intermediate-files/demeanrp-lasso.csv")
+
+stargazer(b,type="text")
 
 # in-sample accuracy
 weighted.mean(round(a$fitted.values)==bestweight[,1], w=bestweight[,2])
