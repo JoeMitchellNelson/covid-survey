@@ -15,17 +15,20 @@ p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
    # dplyr::filter(rejectonly==0) %>% 
     dplyr::filter(Durationinseconds > 360) %>% 
     dplyr::filter(choiceofperson %in% 1:2) %>% 
-    group_by(ResponseId) %>% 
-    mutate(rejectever = sum(rejectonly)) %>% 
-    ungroup() %>% 
-    dplyr::filter(rejectever==0) %>% 
-    dplyr::select(-rejectever)
+   # dplyr::filter(rejectonly==0) %>% 
+     group_by(ResponseId) %>% 
+     mutate(rejectever = sum(rejectonly)) %>% 
+     ungroup() %>% 
+     dplyr::filter(rejectever==0) 
+  
+  dat$owninc <- ifelse(dat$owninc==0,NA,dat$owninc)
+  
   
   dat2 <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.dta")
   
   ethnic <- read.csv("~/covid-survey/data/countyethfrac.csv")[,-1]
   
-  varlabs <- data.frame(variable = names(dat),label= attributes(dat2)$var.labels)
+  varlabs <- data.frame(variable = names(dat2),label= attributes(dat2)$var.labels)
   varlabs$variable <- as.character(varlabs$variable)
   varlabs$label <- as.character(varlabs$label)
   varlabs <- varlabs %>% dplyr::filter(variable!="multi")
@@ -133,7 +136,8 @@ p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
   
   dat$threealts2 <- ifelse(dat$threealts==0,"Alts2","Alts3") %>% as.factor()
   
-
+  
+  
   
 }
 
@@ -309,7 +313,7 @@ ideoltable <- maketable(fac="ideol2",
   str_replace_all("Ideol2","Ideology")
 ideoltable %>% cat()
 
-write(ideoltable,file="~/covid-survey/tables/ideologytable_newint.bib")
+write(ideoltable,file="~/covid-survey/tables/ideologytable_newint.tex")
 
 gendertable <- maketable(fac="gender", 
                          df=dat[which(dat$choiceofperson %in% 1:2 & !dat$gender %in% c("MISSING","NonBinary")),], 
@@ -318,7 +322,7 @@ gendertable <- maketable(fac="gender",
 
 cat(gendertable)
 
-write(gendertable,file="~/covid-survey/tables/gendertable_newint.bib")
+write(gendertable,file="~/covid-survey/tables/gendertable_newint.tex")
 
 
 agetable <- maketable(fac="age", 
@@ -331,7 +335,7 @@ agetable <- maketable(fac="age",
 
 cat(agetable)
 
-write(agetable,file="~/covid-survey/tables/agetable_newint.bib")
+write(agetable,file="~/covid-survey/tables/agetable_newint.tex")
 
 
 racetable <- maketable(fac="race", 
@@ -339,14 +343,14 @@ racetable <- maketable(fac="race",
                        drop=NA) %>% 
   fixnames() %>% 
   str_replace_all("Other","Non-white")
-write(racetable,file="~/covid-survey/tables/racetable_newint.bib")
+write(racetable,file="~/covid-survey/tables/racetable_newint.tex")
 
 eductable <- maketable(fac="education", 
                        df=dat[which(dat$choiceofperson %in% 1:2 & dat$education != "MISSING"),], 
                        drop="MISSING") %>% 
   fixnames() 
 
-write(eductable,file="~/covid-survey/tables/educationtable_newint.bib")
+write(eductable,file="~/covid-survey/tables/educationtable_newint.tex")
 
 
 incometable <- maketable(fac="income", 
@@ -354,7 +358,9 @@ incometable <- maketable(fac="income",
                          drop=NA) %>% 
   fixnames()
 
-write(incometable,file="~/covid-survey/tables/incometable_newint.bib")
+
+cat(incometable)
+write(incometable,file="~/covid-survey/tables/incometable_newint.tex")
 
 ####################################################
 ##################### Main results #################
@@ -498,7 +504,7 @@ maintable <- fixnames2(maintabs) %>% str_replace("centering", "centering \n \\\\
   str_replace("Observations.{0,1000}\\\\\\\\",ns)
 
 cat(maintable)
-write(maintable,file="~/covid-survey/tables/maintable_newint.bib")
+write(maintable,file="~/covid-survey/tables/maintable_993.tex")
 
 
 ############################################################
@@ -671,7 +677,7 @@ hettable1 <- maketable3(c("age","race","gender"),dat,drop=c("NonBinary","MISSING
   str_remove("\\\\\\\\\\[-1.8ex\\] & \\\\multicolumn\\{7\\}\\{c\\}\\{1=Preferred policy\\} \\\\\\\\") %>% 
   str_replace_all("\\\\hline \\\\\\\\\\[-1.8ex\\] \n Absolute deaths","\n Absolute deaths") 
 
-write(hettable1,file="~/covid-survey/tables/hettable1.bib")
+write(hettable1,file="~/covid-survey/tables/hettable1_993.tex")
 
 
 hettable2 <- maketable3(c("ideol2","education","income"),dat,drop=c("MISSING")) %>% 
@@ -692,7 +698,7 @@ hettable2 <- maketable3(c("ideol2","education","income"),dat,drop=c("MISSING")) 
   str_remove("\\\\\\\\\\[-1.8ex\\] & \\\\multicolumn\\{7\\}\\{c\\}\\{1=Preferred policy\\} \\\\\\\\") %>% 
   str_replace_all("\\\\hline \\\\\\\\\\[-1.8ex\\] \n Absolute deaths","\n Absolute deaths") 
 
-write(hettable2,file="~/covid-survey/tables/hettable2.bib")
+write(hettable2,file="~/covid-survey/tables/hettable2_993.tex")
 
 
 ###################################################
@@ -765,4 +771,95 @@ head(dtable)
 dstats <- paste0(dtable$v4)
 
 cat(dstats)
+cat(round(mean(dat$feduinone[which(dat$statquo==0)]),2), " & ",round(sd(dat$feduinone[which(dat$statquo==0)]),2), " &  0 & 1 \\\\")
+cat(round(mean(dat$fedui100[which(dat$statquo==0)]),2), " & ",round(sd(dat$fedui100[which(dat$statquo==0)]),2), " &  0 & 1 \\\\")
+cat(round(mean(dat$fedui200[which(dat$statquo==0)]),2), " & ",round(sd(dat$fedui200[which(dat$statquo==0)]),2), " &  0 & 1 \\\\")
+cat(round(mean(dat$fedui300[which(dat$statquo==0)]),2), " & ",round(sd(dat$fedui300[which(dat$statquo==0)]),2), " &  0 & 1 \\\\")
+cat(round(mean(dat$fedui400[which(dat$statquo==0)]),2), " & ",round(sd(dat$fedui400[which(dat$statquo==0)]),2), " &  0 & 1 \\\\")
 
+
+#################################################################
+############# log prefs for money ? #############################
+#################################################################
+
+dat$owninc <- ifelse(dat$owninc==0,NA,dat$owninc)
+
+dat$feduianyloginc <- dat$feduiany * log(dat$owninc/12 - dat$avcost/10)
+dat$feduinoneloginc <- dat$feduinone * log(dat$owninc/12 - dat$avcost/10)
+
+
+{
+  main1 <- clogit(best ~
+                    mabsdeaths*lassorpfl + mabscases*lassorpfl +
+                    unempl*lassorpfl + avcost*lassorpfl +
+                    
+                    rule1*lassorpfl + rule2*lassorpfl +
+                    rule3*lassorpfl + rule4*lassorpfl +
+                    rule5*lassorpfl + rule6*lassorpfl +
+                    rule7*lassorpfl + rule8*lassorpfl +
+                    rule9*lassorpfl + rule10*lassorpfl +
+                    
+                    statquo*lassorpfl +
+                    strata(choice),data=dat[which(dat$choiceofperson %in% 1:2),]
+                  ,weights=popwt,method="approximate"
+  )
+  
+  main3 <- clogit(best ~
+                    mabsdeaths*lassorpfl + mabscases*lassorpfl +
+                    feduinoneloginc*lassorpfl + feduianyloginc*lassorpfl + 
+                    feduinoneunempl*lassorpfl + feduianyunempl*lassorpfl + 
+                    
+                    rule1*lassorpfl + rule2*lassorpfl +
+                    rule3*lassorpfl + rule4*lassorpfl +
+                    rule5*lassorpfl + rule6*lassorpfl +
+                    rule7*lassorpfl + rule8*lassorpfl +
+                    rule9*lassorpfl + rule10*lassorpfl +
+                    
+                    statquo*lassorpfl +
+                    strata(choice),data=dat[which(dat$choiceofperson %in% 1:2),]
+                  ,weights=popwt,method="approximate"
+  )
+  
+  main2 <- clogit(best ~
+                    mabsdeaths*lassorpfl + mabscases*lassorpfl +
+                    feduinoneavcost*lassorpfl + feduianyavcost*lassorpfl + 
+                    feduinoneunempl*lassorpfl + feduianyunempl*lassorpfl + 
+                    
+                    rule1*lassorpfl + rule2*lassorpfl +
+                    rule3*lassorpfl + rule4*lassorpfl +
+                    rule5*lassorpfl + rule6*lassorpfl +
+                    rule7*lassorpfl + rule8*lassorpfl +
+                    rule9*lassorpfl + rule10*lassorpfl +
+                    
+                    statquo*lassorpfl +
+                    strata(choice),data=dat[which(dat$choiceofperson %in% 1:2),]
+                  ,weights=popwt,method="approximate"
+  )
+  
+}
+summary(main3)
+
+
+main2 <- clogit(best ~
+                   mabsdeaths*lassorpfl + mabscases*lassorpfl +
+                  feduinoneloginc*lassorpfl + feduianyloginc*lassorpfl + 
+                  feduinoneunempl*lassorpfl + feduianyunempl*lassorpfl + 
+                   
+                   rule1*lassorpfl + rule2*lassorpfl +
+                   rule3*lassorpfl + rule4*lassorpfl +
+                   rule5*lassorpfl + rule6*lassorpfl +
+                   rule7*lassorpfl + rule8*lassorpfl +
+                   rule9*lassorpfl + rule10*lassorpfl +
+                  
+                  statquo*lassorpfl +
+                  strata(choice),data=dat[which(!is.na(dat$owninc)),]
+                ,weights=popwt,method="approximate"
+)
+summary(main2)
+
+#######################################################
+########### Descriptive stats sample ##################
+#######################################################
+
+people <- dat %>% dplyr::select(ResponseId,gender,income,race,education,age,ideol2) %>% unique()
+summary(people)

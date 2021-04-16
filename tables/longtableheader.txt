@@ -1,0 +1,31 @@
+\singlespacing
+\captionsetup{width=11cm}
+{
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+\begin{longtable}{l*{4}{c}}
+\caption{TITLE} \label{label} \\
+\hline\hline
+\endfirsthead
+% header for following pages:
+\multicolumn{5}{c}
+{{\tablename\ \thetable{} -- continued from previous page}} \\
+\hline
+% next line would need to be retrieved from within the fragment...
+%\multicolumn{1}{|c|}{\textbf{First column}} & \multicolumn{1}{c|}{\textbf{Second column}} & \multicolumn{1}{c|}{\textbf{Third column}} \\
+\hline
+\endhead
+% footer for all pages with continuations
+\hline \multicolumn{5}{r}{{Continued on next page}} \\
+\hline
+\endfoot
+% footer on final page of table
+\hline\hline
+\endlastfoot
+    %-----------------------------
+   
+
+                    &\multicolumn{2}{c}{}     \\
+                    &        mean&    sd & min & max\\
+
+\hline
+

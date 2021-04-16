@@ -8,35 +8,44 @@ p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
 
 p_load(glmnet,tibble,broom,caret,h2o)
 
-completes <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.csv") %>% 
-  # dplyr::filter(rejectonly==0) %>% 
-  dplyr::filter(Durationinseconds > 360) %>% 
-  dplyr::filter(choiceofperson %in% 1:2) %>% 
-  group_by(ResponseId) %>% 
-  mutate(rejectever = sum(rejectonly)) %>% 
-  ungroup() %>% 
+
+
+
+
+completes <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.csv") %>%
+  # dplyr::filter(rejectonly==0) %>%
+  dplyr::filter(Durationinseconds > 360) %>%
+  dplyr::filter(choiceofperson %in% 1:2) %>%
+  group_by(ResponseId) %>%
+  mutate(rejectever = sum(rejectonly)) %>%
+  ungroup() %>%
   dplyr::filter(rejectever==0) %>%
-  dplyr::select(ResponseId) %>% 
+  dplyr::select(ResponseId,rejectever) %>%
   unique()
 
-completes <- completes$ResponseId %>% as.character()
+ completes <- completes$ResponseId %>% as.character()
 
 dat <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/variables_for_selection_models.dta") %>% dplyr::select(-LocationLatitude,-LocationLongitude)
 
-dat$complete <- ifelse(dat$ResponseId %in% completes,1,0)
+ dat$complete <- ifelse(dat$ResponseId %in% completes,1,0)
+ 
+ 
+  dat$y2020m7deaths <- ifelse(dat$y2020m7deaths<0,0, dat$y2020m7deaths)
+  dat$y2020m10deaths <- ifelse(dat$y2020m10deaths<0,0, dat$y2020m10deaths)
+  dat$y2020m12deaths <- ifelse(dat$y2020m12deaths<0,0, dat$y2020m12deaths)
+ 
 
 dat <- dat[,!str_detect(names(dat),"^On")]
 
 dat <- dat %>% dplyr::select(ResponseId,eligible,complete,popwt,everything())
 dat$countypop <- dat$countypop/1000
 
-# raw <- read.csv("~/covid-survey/data/qualtricsraw.csv")[-c(1:2),] %>% dplyr::select(StartDate,ResponseId)
-# raw$StartDate <- raw$StartDate %>% ymd_hms() %>% as_date 
-# raw$StartDate <- cut(raw$StartDate,5)
-# raw2 <- model.matrix( ~ StartDate,raw) %>% as.data.frame()
-# names(raw2)[2:5] <- c("period1","period2","period3","period4")
-# raw2$ResponseId <- raw$ResponseId
-# dat <- left_join(dat,raw2[,-1])
+dat2 <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.dta")
+varlabs <- data.frame(variable = names(dat2),label= attributes(dat2)$var.labels)
+varlabs <- varlabs %>% dplyr::filter(variable %in% names(dat))
+varlabs$label <- as.character(varlabs$label)
+varlabs$variable <- as.character(varlabs$variable)
+varlabs$label <- ifelse(varlabs$label=="",varlabs$variable,varlabs$label)
 
 exdat <- dat %>% dplyr::select(-ResponseId)
 
@@ -95,6 +104,7 @@ plot(cv.lasso)
 keepers <- model$beta %>% as.matrix %>% as.data.frame() %>% rownames_to_column("vars") %>% dplyr::filter(s0!=0)
 keepers <- keepers$vars 
 keepers
+
 
 keepers2 <- model2$beta %>% as.matrix %>% as.data.frame() %>% rownames_to_column("vars") %>% dplyr::filter(s0!=0)
 keepers2 <- keepers2$vars 
@@ -162,15 +172,64 @@ ggplot() +
 write.csv(demeans,"~/covid-survey/demeanrp-lasso.csv")
 write.csv(demeans,"C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID-shared/intermediate-files/demeanrp-lasso.csv")
 
-stargazer(b,type="text")
+stargazer(a,type="text")
 
 # in-sample accuracy
-weighted.mean(round(a$fitted.values)==bestweight[,1], w=bestweight[,2])
+weighted.mean(round(b$fitted.values)==bestweight[,1], w=bestweight[,2])
 
-# format varlists for Trudy
+varlist <- names(b$coefficients)
+for (i in nrow(varlabs):1) {
+  #if(str_detect(varlist,paste0("",varlabs$variable[i]))) {
+    varlist <- str_replace_all(varlist,varlabs$variable[i],varlabs$label[i])
+  
+}
 
-trudy <- keepers %>% paste(collapse=" ") %>% str_replace_all(":","_")
-trudy2 <- res$term %>% paste(collapse=" ") %>% str_replace_all(":","_")
+# make descriptive statistics
+
+v <- names(b$coefficients)
+
+t <- c()
+
+for (i in 2:length(v)) {
+  
+  if (v[i] %in% names(exdat)) {
+  
+  r <- c(mean(exdat[which(exdat$complete==1),which(names(exdat)==v[i])]),
+         sd(exdat[which(exdat$complete==1),which(names(exdat)==v[i])]),
+         min(exdat[which(exdat$complete==1),which(names(exdat)==v[i])]),
+         max(exdat[which(exdat$complete==1),which(names(exdat)==v[i])])) %>% round(3)
+  
+  } else {
+    
+    v[i] <- paste0(str_split_fixed(v[i],":",n=2)[[2]],":",str_split_fixed(v[i],":",n=2)[[1]])
+    
+    r <- c(mean(exdat[which(exdat$complete==1),which(names(exdat)==v[i])]),
+           sd(exdat[which(exdat$complete==1),which(names(exdat)==v[i])]),
+           min(exdat[which(exdat$complete==1),which(names(exdat)==v[i])]),
+           max(exdat[which(exdat$complete==1),which(names(exdat)==v[i])])) %>% round(3)
+  }
+  
+  r <- c(v[i],r)
+  r <- r %>% paste(collapse= " & ") %>% paste(" \\\\ \n ")
+  
+  t <- paste0(t,r)
+  
+}
+
+ for (i in 1:nrow(varlabs)) {
+   t <- str_replace_all(t,varlabs$variable[i],varlabs$label[i])
+ }
+
+cat(t)
+
+longhead <- read_file("~/covid-survey/tables/longtableheader.txt")
+longfoot <- read_file("~/covid-survey/tables/longtablefooter.txt")
+
+s <- paste0(longhead,t,longfoot)
+cat(s)
+write(s,"~/covid-survey/tables/selection-desc.tex")
+
+
 
 ############## Elastic Net ##################
 
