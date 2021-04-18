@@ -4,7 +4,7 @@ p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
        rvest,stringr,Hmisc,rattle,RColorBrewer,ddpcr,tidytext,tidyr,
        ggrepel,ggplot2,png,ggpubr,tidycensus,sf,plm,lmtest,stargazer,MASS,
        xtable,knitr,magick,purrr,ggthemes,gifski,extrafont,latex2exp,
-       cowplot,mapproj,patchwork,remotes,tictoc,Hmisc,english,readstata13,margins,lmtest)
+       cowplot,mapproj,patchwork,remotes,tictoc,Hmisc,english,readstata13,margins,lmtest,fastDummies)
 
 #################### READ IN DATA ################
 {
@@ -136,6 +136,12 @@ p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
   
   dat$threealts2 <- ifelse(dat$threealts==0,"Alts2","Alts3") %>% as.factor()
   
+  
+  dat <- dummy_cols(dat,
+                    select_columns=c("rule1","rule2","rule3","rule4","rule5","rule6","rule7","rule8","rule9","rule10"),
+                    remove_first_dummy = T)
+  
+  names(dat) <- names(dat) %>% str_replace_all("_",".")
 
   
 }
@@ -170,12 +176,13 @@ getsummary <- function (fac,df) {
   bv <- c("mabsdeaths","mabscases",
           "feduianyavcost","feduinoneavcost",
           "feduianyunempl","feduinoneunempl",
-          "rule1a","rule2a","rule3a","rule4a","rule5a","rule6a",
-          "rule7a","rule8a","rule9a","rule10a",
-          "rule1b","rule2b","rule3b","rule4b","rule5b","rule6b",
-          "rule7b","rule8b","rule9b","rule10b",
-          "rule2c","rule3c","rule4c","rule5c","rule6c",
-          "rule7c","rule8c","rule9c","rule10c",
+          "rule1.1",           "rule1.2",          
+          "rule2.1",           "rule2.2",           "rule2.3",              "rule3.1",           "rule3.2",          
+          "rule3.3",            "rule4.1",           "rule4.2",           "rule4.3",               "rule5.1",          
+          "rule5.2",           "rule5.3",              "rule6.1",           "rule6.2",           "rule6.3",           
+          "rule7.1" ,          "rule7.2",           "rule7.3",              "rule8.1",           "rule8.2" ,      "rule8.3",          
+          "rule9.1",           "rule9.2",           "rule9.3",             "rule10.1" ,         "rule10.2",         
+          "rule10.3",         
           "statquo")
   
   newdf <- df %>% dplyr::select("best","choice",all_of(bv),all_of(fac),"popwt","popwt2","lassorpfl")
@@ -561,6 +568,7 @@ fixnames2 <- function (x) {
 {
   restr <- paste0("Restrictions (continuous) & $\\\\checkmark$ & $\\\\checkmark$ & $\\\\checkmark$ & & & \\\\\\\\ \n",
                   "Restrictions (indicators) & & & & $\\\\checkmark$ & $\\\\checkmark$ & $\\\\checkmark$ \\\\\\\\ \n",
+                  "All response propensity interactions & $\\\\checkmark$ & $\\\\checkmark$ & $\\\\checkmark$ & $\\\\checkmark$ & $\\\\checkmark$ & $\\\\checkmark$ \\\\\\\\ \n",
                   "\\\\hline \\\\\\\\[-1.8ex]")
 
 
@@ -646,8 +654,61 @@ cat(maintable2)
 
 write(maintable2,file="~/covid-survey/tables/maintable_993_APPENDIX.tex")
 
+###########################################################
+############### with and without RP #######################
+###########################################################
 
+{
 
+  mainwithoutrp <- clogit(best ~
+                         mabsdeaths + mabscases +
+                         feduinoneavcost + feduianyavcost +
+                         feduinoneunempl + feduianyunempl +
+                         
+                         factor(rule1) + factor(rule2) +
+                         factor(rule3) + factor(rule4) +
+                         factor(rule5) + factor(rule6) +
+                         factor(rule7) + factor(rule8) +
+                         factor(rule9) + factor(rule10) +
+                         
+                         statquo +
+                         strata(choice),data=dat[which(dat$choiceofperson %in% 1:2),]
+                       ,weights=popwt,method="approximate"
+  )
+  
+  mainwithrp <- clogit(best ~
+                     mabsdeaths*lassorpfl + mabscases*lassorpfl +
+                     feduinoneavcost*lassorpfl + feduianyavcost*lassorpfl +
+                     feduinoneunempl*lassorpfl + feduianyunempl*lassorpfl +
+                     
+                     factor(rule1)*lassorpfl + factor(rule2)*lassorpfl +
+                     factor(rule3)*lassorpfl + factor(rule4)*lassorpfl +
+                     factor(rule5)*lassorpfl + factor(rule6)*lassorpfl +
+                     factor(rule7)*lassorpfl + factor(rule8)*lassorpfl +
+                     factor(rule9)*lassorpfl + factor(rule10)*lassorpfl +
+                     
+                     statquo*lassorpfl +
+                     strata(choice),data=dat[which(dat$choiceofperson %in% 1:2),]
+                   ,weights=popwt,method="approximate"
+  )
+  
+}
+
+vars.order <- c("mabsdeaths","mabsdeaths:lassorpfl",  "mabscases","lassorpfl:mabscases", 
+                "feduinoneavcost","lassorpfl:feduinoneavcost", "feduianyavcost", "lassorpfl:feduianyavcost",
+                "feduinoneunempl", "lassorpfl:feduinoneunempl", "feduianyunempl", "lassorpfl:feduianyunempl",
+                "statquo", "lassorpfl:statquo")
+
+rpcompare <- stargazer(mainwithoutrp,mainwithrp,
+                       type="latex",
+                       order=paste0("^", vars.order , "$"),
+                       keep=paste0("^", vars.order , "$"),
+                       keep.stat=c("n","ll"),
+                       no.space=T)
+rpcompare <- rpcompare %>% str_replace_all("lassorpfl:[:alpha:]{1,20} ","$\\\\quad \\\\times$ Response propensity ")  %>% fixnames2() 
+cat(rpcompare)
+
+write(rpcompare,"~/covid-survey/tables/rp_compare.tex")
 ############################################################
 ############################################################
 ######### MERGE HETEROGENEITY TABLES  ######################
@@ -940,3 +1001,180 @@ summary(clogit(best ~ mabsdeaths*lassorpfl + mabscases*lassorpfl +
                  factor(rule9)*lassorpfl + factor(rule10)*lassorpfl +
                  
                  statquo*lassorpfl + strata(choice),data=dat[which(dat$ideol2=="liberal"),]))
+
+
+############################################################
+############################################################
+######### HETEROGENEITY TABLES for APPENDIX  ###############
+############################################################
+############################################################
+
+df <- dat
+fac <- c("age","race")
+drop=NA
+
+
+
+maketable3 <- function (fac,df,drop=c("MISSING")) {
+  
+  mods <- list()
+  coeflist <- list()
+  selist <- list()
+  modelnames <- c()
+  titles <- c()
+  npeople <- c()
+  nchoices <- c()
+  
+  
+  
+  for (j in 1:length(fac)) {
+    
+    df <- df %>% dplyr::filter(!is.na(eval(as.symbol(fac[j])))) %>% droplevels()
+    
+    s <- getsummary(fac[j],df)
+    
+    levs <- df[,which(names(df)==fac[j])] %>%  unique()
+    levs <- summary(levs[,1])[,1] %>% str_remove_all(":1") %>% trimws()
+    levs <- levs %>% str_remove_all(" ")
+    
+    p <- df[which(names(df) %in% c("ResponseId",fac[j]))] %>% unique()
+    
+    
+    for (i in 1:length(levs)) {
+      npeople <- c(npeople,sum(p[,2]==levs[i]))
+    }
+    
+    p <- df[,which(names(df) %in% c("ResponseId",fac[j]))]
+    
+    
+    for (i in 1:length(levs)) {
+      nchoices <- c(nchoices,sum(p[,2]==levs[i]))
+    }
+    
+    
+    
+    
+    t <- s$coefficients %>% as.data.frame() %>% rownames_to_column(var="term")  
+     # dplyr::filter(! str_detect(term,"lassorpfl"))
+    
+    
+    
+    for (i in 1:length(levs)) {
+      if (!levs[i] %in% drop) {
+        tempcoef <- t %>% dplyr::filter(str_detect(term,levs[i]) )
+        assign(paste0(levs[i],"coef"),tempcoef)
+        modelnames <- c(modelnames,paste0(levs[i],"coef"))
+        titles <- c(titles,levs[i])
+      }
+    }
+    
+    
+    fake <- lm(best ~ mabsdeaths + mabscases + feduianyavcost + feduinoneavcost + feduianyunempl + feduinoneunempl +
+                 rule1.1 + rule2.1 + rule3.1 +rule4.1 +rule5.1 + 
+                 rule6.1 + rule7.1 + rule8.1 + rule9.1 + rule10.1 +
+                 
+                 rule1.2 + rule2.2 + rule3.2 +rule4.2 +rule5.2 + 
+                 rule6.2 + rule7.2 + rule8.2 + rule9.2 + rule10.2 +
+                 
+                 rule2.3 + rule3.3 +rule4.3 +rule5.3 + 
+                 rule6.3 + rule7.3 + rule8.3 + rule9.3 + rule10.3 +
+                 statquo +
+                 
+                 mabsdeaths:lassorpfl + mabscases:lassorpfl + feduianyavcost:lassorpfl + 
+                 feduinoneavcost:lassorpfl + feduianyunempl:lassorpfl + feduinoneunempl:lassorpfl +
+                 rule1.1:lassorpfl + rule2.1:lassorpfl + rule3.1:lassorpfl +rule4.1:lassorpfl +rule5.1:lassorpfl + 
+                 rule6.1:lassorpfl + rule7.1:lassorpfl + rule8.1:lassorpfl + rule9.1:lassorpfl + rule10.1:lassorpfl +
+                 
+                 rule1.2:lassorpfl + rule2.2:lassorpfl + rule3.2:lassorpfl +rule4.2:lassorpfl +rule5.2:lassorpfl + 
+                 rule6.2:lassorpfl + rule7.2:lassorpfl + rule8.2:lassorpfl + rule9.2:lassorpfl + rule10.2:lassorpfl +
+                 
+                 rule2.3:lassorpfl + rule3.3:lassorpfl +rule4.3:lassorpfl +rule5.3:lassorpfl + 
+                 rule6.3:lassorpfl + rule7.3:lassorpfl + rule8.3:lassorpfl + rule9.3 + rule10.3:lassorpfl +
+                 statquo:lassorpfl 
+               
+               + 0,data = df)
+    
+    vars.order <- c("mabsdeaths",  "mabscases", "feduinoneavcost",  "feduianyavcost",  
+                    "feduinoneunempl",  "feduianyunempl", 
+                    "statquo" )
+    
+    
+    
+    for (i in 1:length(modelnames)) {mods[[i]] <- fake}
+    
+    for (i in 1:length(modelnames)) {coeflist[[i]] <- (modelnames[i] %>% as.symbol() %>% eval())$coef}
+    
+    for (i in 1:length(modelnames)) {selist[[i]] <- (modelnames[i] %>% as.symbol() %>% eval())$`robust se`}
+    
+  }
+  
+  
+  nchoices <- nchoices/2
+  
+  nchoices <- nchoices[which(npeople>200)]
+  npeople <- npeople[which(npeople>200)]
+  
+  ns <- paste0("Respondents & ",npeople[1], " & ",npeople[2]," & ",npeople[3]," & ",npeople[4]," & ",npeople[5]," & ",npeople[6]," & ",npeople[7],
+               "\\\\\\\\ \n Choices & ", nchoices[1], " & ",nchoices[2]," & ",nchoices[3]," & ",nchoices[4]," & ",nchoices[5]," & ",nchoices[6]," & ",nchoices[7],"\\\\\\\\")
+  
+  
+  
+  b <- stargazer(mods,type="latex",
+                # omit="rule",
+                 coef = coeflist,
+                 # standard errors
+                 se = selist,
+                 order=paste0("^", vars.order , "$"),
+                 column.labels = str_to_title(titles),
+                 keep.stat="n",
+                 # digits.extra = 5,
+                 no.space = T,
+                 t.auto = T) %>% 
+    str_replace("Observations.{0,1000}\\\\\\\\",ns)
+  
+  paste(b,collapse="\n")
+  
+}
+
+hettable1 <- maketable3(c("age","race","gender"),dat,drop=c("NonBinary","MISSING")) %>% 
+  str_replace("centering", "centering \n \\\\scriptsize") %>% 
+  fixnames() %>% 
+  str_remove_all(" for county") %>% 
+  str_replace_all("Other","Non-white") %>% 
+  str_replace_all("18to34","18 to 34") %>% 
+  str_replace_all("35to64","35 to 64") %>% 
+  str_replace_all("65andolder","65 +") %>% 
+  str_replace_all("& \\(1\\) & \\(2\\) & \\(3\\) & \\(4\\) & \\(5\\) & \\(6\\) & \\(7\\)",
+                  "\\\\textit\\{Dep. var\\}: 1=Preferred policy & \\(1\\) & \\(2\\) & \\(3\\) & \\(4\\) & \\(5\\) & \\(6\\) & \\(7\\) \\\\\\\\ \n \\\\cline\\{1-1\\} \\\\cline\\{2-4\\} \\\\cline\\{5-6\\} \\\\cline\\{7-8\\}") %>% 
+  str_remove(" & \\\\multicolumn\\{7\\}\\{c\\}\\{\\\\textit\\{Dependent variable:\\}\\} \\\\\\\\") %>% 
+  str_remove("\\\\cline\\{2-8\\}") %>% 
+  str_remove("\\\\\\\\\\[-1.8ex\\] & \\\\multicolumn\\{7\\}\\{c\\}\\{1=Preferred policy\\} \\\\\\\\") %>% 
+  str_replace_all("\\\\hline \\\\\\\\\\[-1.8ex\\] \n Absolute deaths","\n Absolute deaths") %>% 
+  str_replace_all(":lassorpfl"," $\\\\times$ RP")
+
+write(hettable1,file="~/covid-survey/tables/hettable1_993_norestr_APPENDIX.tex")
+
+
+hettable2 <- maketable3(c("ideol2","education","income"),dat,drop=c("MISSING")) %>% 
+  str_replace("centering", "centering \n \\\\scriptsize") %>% 
+  fixnames() %>% 
+  str_remove_all(" for county") %>% 
+  str_replace_all("Other","Non-white") %>% 
+  str_replace_all("18to34","18 to 34") %>% 
+  str_replace_all("35to64","35 to 64") %>% 
+  str_replace_all("65andolder","65 +") %>% 
+  str_replace_all("Noncollege","Non-college") %>% 
+  str_replace_all("Lessthan75","< \\\\$75k/yr") %>% 
+  str_replace_all("Morethan75","> \\\\$75k/yr") %>%
+  str_replace_all("& \\(1\\) & \\(2\\) & \\(3\\) & \\(4\\) & \\(5\\) & \\(6\\) & \\(7\\)",
+                  "\\\\textit\\{Dep. var\\}: 1=Preferred policy & \\(1\\) & \\(2\\) & \\(3\\) & \\(4\\) & \\(5\\) & \\(6\\) & \\(7\\) \\\\\\\\ \n \\\\cline\\{1-1\\} \\\\cline\\{2-4\\} \\\\cline\\{5-6\\} \\\\cline\\{7-8\\}") %>% 
+  str_remove(" & \\\\multicolumn\\{7\\}\\{c\\}\\{\\\\textit\\{Dependent variable:\\}\\} \\\\\\\\") %>% 
+  str_remove("\\\\cline\\{2-8\\}") %>% 
+  str_remove("\\\\\\\\\\[-1.8ex\\] & \\\\multicolumn\\{7\\}\\{c\\}\\{1=Preferred policy\\} \\\\\\\\") %>% 
+  str_replace_all("\\\\hline \\\\\\\\\\[-1.8ex\\] \n Absolute deaths","\n Absolute deaths") %>% 
+  str_replace_all(":lassorpfl"," $\\\\times$ RP")
+
+cat(hettable2)
+
+write(hettable2,file="~/covid-survey/tables/hettable2_993_norestr_APPENDIX.tex")
+

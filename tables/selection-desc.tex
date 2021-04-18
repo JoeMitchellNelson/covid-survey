@@ -1,171 +1,65 @@
-\singlespacing
-\captionsetup{width=11cm}
-{
-\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
-\begin{longtable}{l*{4}{c}}
-\caption{TITLE} \label{label} \\
-\hline\hline
-\endfirsthead
-% header for following pages:
-\multicolumn{5}{c}
-{{\tablename\ \thetable{} -- continued from previous page}} \\
-\hline
-% next line would need to be retrieved from within the fragment...
-%\multicolumn{1}{|c|}{\textbf{First column}} & \multicolumn{1}{c|}{\textbf{Second column}} & \multicolumn{1}{c|}{\textbf{Third column}} \\
-\hline
-\endhead
-% footer for all pages with continuations
-\hline \multicolumn{5}{r}{{Continued on next page}} \\
-\hline
-\endfoot
-% footer on final page of table
-\hline\hline
-\endlastfoot
-    %-----------------------------
-   
-
-                    &\multicolumn{2}{c}{}     \\
-                    &        mean&    sd & min & max\\
-
-\hline
-
-1=Have ZIP code data & 0.958 & 0.201 & 0 & 1  \\ 
- Mon & 0.298 & 0.457 & 0 & 1  \\ 
- County population in 2018 & 2640.614 & 3567.421 & 1.146 & 10098.052  \\ 
- Tue & 0.208 & 0.406 & 0 & 1  \\ 
- mobile & 0.535 & 0.499 & 0 & 1  \\ 
- Zip pr: age 18-24 & 0.084 & 0.04 & 0 & 0.359  \\ 
- County deaths/50k Sep 2020 & 2.537 & 2.164 & 0 & 18.074  \\ 
- Wed & 0.14 & 0.348 & 0 & 1  \\ 
- hour17 & 0.075 & 0.263 & 0 & 1  \\ 
- Fri & 0.108 & 0.311 & 0 & 1  \\ 
- hour21 & 0.04 & 0.197 & 0 & 1  \\ 
- hour23 & 0.031 & 0.175 & 0 & 1  \\ 
- pzipr1=Own race asian & 0.108 & 0.124 & 0 & 0.746  \\ 
- Sat & 0.103 & 0.304 & 0 & 1  \\ 
- 1=Own age is 75 and up  & 0.056 & 0.23 & 0 & 1  \\ 
- 1=Own hhld inc 30K to 50K & 0.122 & 0.327 & 0 & 1  \\ 
- hour5 & 0.027 & 0.161 & 0 & 1  \\ 
- pzipr1=Own race multi & 0.048 & 0.023 & 0 & 0.153  \\ 
- hour7 & 0.018 & 0.132 & 0 & 1  \\ 
- 1=Own hhld inc 125K to 150K & 0.087 & 0.283 & 0 & 1  \\ 
- 1=Own hhld inc 220K and up & 0.07 & 0.255 & 0 & 1  \\ 
- hour9 & 0.047 & 0.212 & 0 & 1  \\ 
- 1=Own age is 25 to 34 & 0.193 & 0.394 & 0 & 1  \\ 
- hour12 & 0.037 & 0.19 & 0 & 1  \\ 
- hour13 & 0.069 & 0.253 & 0 & 1  \\ 
- 1=Own hhld inc 20K to 25K & 0.056 & 0.23 & 0 & 1  \\ 
- hour14 & 0.07 & 0.255 & 0 & 1  \\ 
- 1=Own age is 18 to 24 & 0.125 & 0.331 & 0 & 1  \\ 
- pziprural & 0.089 & 0.198 & 0 & 1  \\ 
- hour15 & 0.081 & 0.272 & 0 & 1  \\ 
- 1=Own age is 45 to 54 & 0.113 & 0.317 & 0 & 1  \\ 
- 1=Own race white & 0.703 & 0.457 & 0 & 1  \\ 
- 1=Own hhld inc 50K to 75K & 0.143 & 0.351 & 0 & 1  \\ 
- pzipr1=Own race black & 0.047 & 0.06 & 0 & 0.662  \\ 
+fromlaunch & 20.307 & 6.658 & 0 & 33  \\ 
+ CDC SVI cnty-Minority, language & 0.855 & 0.166 & 0.256 & 0.998  \\ 
+ CDC SVI cnty-Hsg type, transp. & 0.759 & 0.183 & 0.063 & 0.999  \\ 
+ 1=Own gender female & 0.511 & 0.5 & 0 & 1  \\ 
+ 1=Own race black & 0.046 & 0.21 & 0 & 1  \\ 
+ 1=Own age is 25 to 34 & 0.193 & 0.395 & 0 & 1  \\ 
  1=Own age is 35 to 44 & 0.229 & 0.42 & 0 & 1  \\ 
- Zip pr: race other & 0.098 & 0.115 & 0 & 0.608  \\ 
- 1=Own hhld inc 175K to 200K & 0.037 & 0.19 & 0 & 1  \\ 
- hour24 & 0.025 & 0.155 & 0 & 1  \\ 
- 1=Own hhld inc less than 20K & 0.116 & 0.32 & 0 & 1  \\ 
- 1=Own hhld inc 100K to 125K & 0.108 & 0.311 & 0 & 1  \\ 
+ 1=Own age is 75 and up  & 0.056 & 0.231 & 0 & 1  \\ 
+ 1=Own hhld inc less than 20K & 0.115 & 0.319 & 0 & 1  \\ 
+ 1=Own hhld inc 20K to 25K & 0.055 & 0.229 & 0 & 1  \\ 
+ 1=Own hhld inc 30K to 50K & 0.117 & 0.321 & 0 & 1  \\ 
+ 1=Own hhld inc 100K to 125K & 0.109 & 0.311 & 0 & 1  \\ 
+ 1=Own hhld inc 125K to 150K & 0.09 & 0.286 & 0 & 1  \\ 
+ Mon & 0.298 & 0.458 & 0 & 1  \\ 
+ Tue & 0.206 & 0.405 & 0 & 1  \\ 
+ Wed & 0.142 & 0.349 & 0 & 1  \\ 
+ Fri & 0.109 & 0.311 & 0 & 1  \\ 
+ Sat & 0.103 & 0.304 & 0 & 1  \\ 
+ hour7 & 0.017 & 0.13 & 0 & 1  \\ 
+ hour9 & 0.047 & 0.212 & 0 & 1  \\ 
+ hour14 & 0.069 & 0.254 & 0 & 1  \\ 
+ hour15 & 0.082 & 0.274 & 0 & 1  \\ 
+ hour17 & 0.077 & 0.266 & 0 & 1  \\ 
+ hour19 & 0.045 & 0.208 & 0 & 1  \\ 
+ hour21 & 0.039 & 0.194 & 0 & 1  \\ 
+ hour23 & 0.031 & 0.174 & 0 & 1  \\ 
  Zip pr: vote republican & 0.353 & 0.143 & 0.093 & 0.769  \\ 
- pzipurban & 0.872 & 0.263 & 0 & 1  \\ 
- fromlaunch & 20.344 & 6.602 & 0 & 33  \\ 
- 1=Own age is 55 to 64 & 0.115 & 0.319 & 0 & 1  \\ 
- 1=Own age is 65 to 74 & 0.17 & 0.376 & 0 & 1  \\ 
- 1=Own race asian & 0.106 & 0.308 & 0 & 1  \\ 
- 1=Own race black & 0.045 & 0.208 & 0 & 1  \\ 
- 1=Own gender female & 0.516 & 0.5 & 0 & 1  \\ 
- County deaths/50k Jan 2021 & 14.126 & 10.298 & 0 & 32.738  \\ 
- Zip pr: indus = agric. & 0.02 & 0.044 & 0 & 0.54  \\ 
- pcrural & 0.13 & 0.183 & 0 & 1  \\ 
- County deaths/50k Jul 2020 & 2.854 & 2.993 & -0.692 & 32.461  \\ 
- pintntother & 0.007 & 0.007 & 0 & 0.045  \\ 
- pcmptrdial & 0.003 & 0.002 & 0 & 0.034  \\ 
- Zip pr: vote democratic & 0.57 & 0.151 & 0.163 & 0.85  \\ 
- Zip pr: indus = manuf. & 0.096 & 0.049 & 0 & 0.278  \\ 
- Zip pr: age 65-74 & 0.082 & 0.041 & 0 & 0.338  \\ 
+ Days first cnty case, in 100s & 3.438 & 0.24 & 2.43 & 3.89  \\ 
+ Have >= 1 county death & 0.995 & 0.071 & 0 & 1  \\ 
+ Days first cnty death, in 100s & 3.045 & 0.543 & 0 & 3.68  \\ 
+ cases4wk & 786.802 & 505.472 & 60.705 & 2835.951  \\ 
+ Zip pr: age 18-24 & 0.084 & 0.04 & 0 & 0.359  \\ 
  Zip pr: age 55-64 & 0.117 & 0.039 & 0 & 0.385  \\ 
- Have >= 1 county death & 0.995 & 0.07 & 0 & 1  \\ 
- CDC SVI cnty-Minority, language & 0.856 & 0.166 & 0.256 & 0.998  \\ 
- Days first cnty death, in 100s & 3.046 & 0.54 & 0 & 3.68  \\ 
- pintntnosub & 0.02 & 0.01 & 0 & 0.054  \\ 
+ Zip pr: race black & 0.047 & 0.06 & 0 & 0.662  \\ 
+ Zip pr: race asian & 0.108 & 0.124 & 0 & 0.746  \\ 
+ Zip pr: indus = agric. & 0.019 & 0.042 & 0 & 0.54  \\ 
  Zip pr: indus = wholes. & 0.027 & 0.015 & 0 & 0.122  \\ 
  Zip pr: indus = retail. & 0.108 & 0.036 & 0 & 0.396  \\ 
- County cases/50k Oct 2020 & 141.027 & 63.502 & 0 & 537.281  \\ 
  Zip pr: indus = transp. & 0.049 & 0.029 & 0 & 0.28  \\ 
- County deaths/50k Aug 2020 & 3.481 & 3.026 & 0 & 23.028  \\ 
- cases4wk & 786.575 & 503.485 & 60.705 & 2835.951  \\ 
+ Zip pr: indus = edu. serv. & 0.205 & 0.066 & 0 & 0.66  \\ 
+ Zip pr: indus = arts, ent. & 0.098 & 0.042 & 0 & 0.316  \\ 
+ County unemp rate Mar'20 & 5.411 & 2.055 & 2.8 & 23.5  \\ 
+ County unemp rate Nov'20 & 6.904 & 2.141 & 3.7 & 16.2  \\ 
+ County cases/50k Jun 2020 & 111.564 & 115.721 & 0 & 1278.466  \\ 
+ County cases/50k Jul 2020 & 239.921 & 180.576 & 0 & 943.458  \\ 
+ County cases/50k Aug 2020 & 188.713 & 132.845 & 0 & 1042.168  \\ 
+ County cases/50k Oct 2020 & 141.259 & 63.762 & 0 & 537.281  \\ 
+ County cases/50k Jan 2021 & 851.739 & 566.377 & 60.705 & 1808.252  \\ 
+ County deaths/50k Jul 2020 & 2.872 & 3.009 & 0 & 32.461  \\ 
+ County deaths/50k Aug 2020 & 3.489 & 3.038 & 0 & 23.028  \\ 
+ County deaths/50k Sep 2020 & 2.533 & 2.171 & 0 & 18.074  \\ 
+ pzipurban & 0.872 & 0.264 & 0 & 1  \\ 
+ pintntother & 0.007 & 0.007 & 0 & 0.045  \\ 
+ pintntnosub & 0.02 & 0.01 & 0 & 0.054  \\ 
+ pcmptrdial & 0.003 & 0.002 & 0 & 0.034  \\ 
  pcmptrbroad & 0.86 & 0.041 & 0.641 & 0.914  \\ 
- CDC SVI cnty-Hsg type, transp. & 0.76 & 0.184 & 0.063 & 0.999  \\ 
- Mon:County population in 2018 & 827.259 & 2300.104 & 0 & 10098.052  \\ 
- Tue:mobile & 0.136 & 0.342 & 0 & 1  \\ 
- Tue:Zip pr: age 18-24 & 0.017 & 0.039 & 0 & 0.359  \\ 
- Tue:County deaths/50k Sep 2020 & 0.584 & 1.599 & 0 & 18.074  \\ 
- Wed:hour17 & 0.019 & 0.135 & 0 & 1  \\ 
- Fri:hour21 & 0.002 & 0.044 & 0 & 1  \\ 
- Fri:hour23 & 0.001 & 0.031 & 0 & 1  \\ 
- Fri:pzipr1=Own race asian & 0.01 & 0.043 & 0 & 0.449  \\ 
- Sat:1=Own age is 75 and up  & 0.001 & 0.031 & 0 & 1  \\ 
- Sat:1=Own hhld inc 30K to 50K & 0.016 & 0.124 & 0 & 1  \\ 
- hour5:pzipr1=Own race multi & 0.002 & 0.01 & 0 & 0.125  \\ 
- hour7:1=Own hhld inc 125K to 150K & 0.001 & 0.031 & 0 & 1  \\ 
- hour7:1=Own hhld inc 220K and up & 0 & 0 & 0 & 0  \\ 
- hour9:1=Own age is 25 to 34 & 0.015 & 0.121 & 0 & 1  \\ 
- hour12:1=Own age is 25 to 34 & 0.005 & 0.07 & 0 & 1  \\ 
- hour13:1=Own hhld inc 20K to 25K & 0.001 & 0.031 & 0 & 1  \\ 
- hour14:1=Own age is 18 to 24 & 0.013 & 0.112 & 0 & 1  \\ 
- hour14:pziprural & 0.005 & 0.059 & 0 & 1  \\ 
- hour15:1=Own age is 45 to 54 & 0.007 & 0.083 & 0 & 1  \\ 
- hour15:1=Own hhld inc 20K to 25K & 0.002 & 0.044 & 0 & 1  \\ 
- hour17:1=Own race white & 0.042 & 0.201 & 0 & 1  \\ 
- hour17:1=Own hhld inc 50K to 75K & 0.006 & 0.077 & 0 & 1  \\ 
- hour17:pzipr1=Own race black & 0.003 & 0.018 & 0 & 0.251  \\ 
- hour21:1=Own age is 35 to 44 & 0.005 & 0.07 & 0 & 1  \\ 
- hour21:pzipr1=Own race black & 0.002 & 0.01 & 0 & 0.135  \\ 
- hour21:Zip pr: race other & 0.004 & 0.029 & 0 & 0.469  \\ 
- hour23:1=Own hhld inc 175K to 200K & 0 & 0 & 0 & 0  \\ 
- hour24:1=Own age is 75 and up  & 0 & 0 & 0 & 0  \\ 
- mobile:1=Own hhld inc less than 20K & 0.074 & 0.261 & 0 & 1  \\ 
- mobile:1=Own hhld inc 30K to 50K & 0.055 & 0.228 & 0 & 1  \\ 
- mobile:1=Own hhld inc 100K to 125K & 0.055 & 0.228 & 0 & 1  \\ 
- mobile:Zip pr: vote republican & 0.188 & 0.204 & 0 & 0.769  \\ 
- mobile:pzipurban & 0.458 & 0.475 & 0 & 1  \\ 
- mobile:pziprural & 0.047 & 0.147 & 0 & 1  \\ 
- fromlaunch:Zip pr: age 18-24 & 1.71 & 1.016 & 0 & 8.251  \\ 
- fromlaunch:1=Have ZIP code data & 19.537 & 7.604 & 0 & 33  \\ 
- 1=Own age is 25 to 34:1=Own hhld inc 30K to 50K & 0.02 & 0.139 & 0 & 1  \\ 
- 1=Own age is 55 to 64:1=Own hhld inc 20K to 25K & 0.002 & 0.044 & 0 & 1  \\ 
- 1=Own age is 65 to 74:1=Own race asian & 0.024 & 0.152 & 0 & 1  \\ 
- 1=Own age is 75 and up :1=Own race black & 0 & 0 & 0 & 0  \\ 
- 1=Own gender female:County deaths/50k Jan 2021 & 6.981 & 9.726 & 0 & 32.738  \\ 
- 1=Own race black:Zip pr: indus = agric. & 0 & 0.003 & 0 & 0.085  \\ 
- 1=Own race black:pcrural & 0.004 & 0.036 & 0 & 1  \\ 
- 1=Own hhld inc less than 20K:County deaths/50k Jul 2020 & 0.279 & 1.148 & -0.692 & 12.354  \\ 
- 1=Own hhld inc 20K to 25K:pzipr1=Own race asian & 0.004 & 0.023 & 0 & 0.312  \\ 
- 1=Own hhld inc 20K to 25K:pintntother & 0 & 0.003 & 0 & 0.034  \\ 
- 1=Own hhld inc 30K to 50K:Zip pr: race other & 0.01 & 0.041 & 0 & 0.476  \\ 
- 1=Own hhld inc 125K to 150K:pcrural & 0.015 & 0.088 & 0 & 1  \\ 
- 1=Own hhld inc 125K to 150K:pcmptrdial & 0 & 0.002 & 0 & 0.034  \\ 
- 1=Own hhld inc 220K and up:pziprural & 0.004 & 0.041 & 0 & 1  \\ 
- Zip pr: vote democratic:Zip pr: indus = manuf. & 0.055 & 0.032 & 0 & 0.189  \\ 
- Zip pr: age 18-24:Zip pr: age 65-74 & 0.007 & 0.003 & 0 & 0.03  \\ 
- Zip pr: age 55-64:pzipurban & 0.104 & 0.037 & 0 & 0.22  \\ 
- Zip pr: age 55-64:Have >= 1 county death & 0.117 & 0.039 & 0 & 0.385  \\ 
- Zip pr: age 65-74:pzipurban & 0.071 & 0.032 & 0 & 0.315  \\ 
- Zip pr: age 65-74:Have >= 1 county death & 0.081 & 0.04 & 0 & 0.332  \\ 
- Zip pr: age 65-74:CDC SVI cnty-Minority, language & 0.068 & 0.031 & 0 & 0.306  \\ 
- Zip pr: indus = manuf.:Days first cnty death, in 100s & 0.296 & 0.165 & 0 & 0.946  \\ 
- Zip pr: indus = manuf.:pintntnosub & 0.002 & 0.001 & 0 & 0.009  \\ 
- Zip pr: indus = wholes.:pintntnosub & 0.001 & 0 & 0 & 0.004  \\ 
- Zip pr: indus = retail.:County cases/50k Oct 2020 & 15.416 & 8.857 & 0 & 71.414  \\ 
- Zip pr: indus = transp.:County deaths/50k Aug 2020 & 0.184 & 0.218 & 0 & 1.442  \\ 
- Zip pr: indus = transp.:cases4wk & 40.638 & 41.442 & 0 & 303.709  \\ 
- pzipurban:pcmptrbroad & 0.752 & 0.232 & 0 & 0.914  \\ 
- Days first cnty death, in 100s:1=Have ZIP code data & 2.919 & 0.812 & 0 & 3.68  \\ 
- Have >= 1 county death:1=Have ZIP code data & 0.953 & 0.212 & 0 & 1  \\ 
- 1=Have ZIP code data:CDC SVI cnty-Hsg type, transp. & 0.725 & 0.235 & 0 & 0.999  \\ 
- \end{longtable}
-}
-\doublespacing
+ pcmptrnoint & 0.066 & 0.019 & 0.038 & 0.192  \\ 
+ County population in 2018 & 2652.225 & 3578.59 & 1.146 & 10098.052  \\ 
+ 1=Own age is 45 to 54 & 0.115 & 0.319 & 0 & 1  \\ 
+ 1=Own race white & 0.703 & 0.457 & 0 & 1  \\ 
+ pcrural & 0.131 & 0.184 & 0 & 1  \\ 
+ mobile & 0.534 & 0.499 & 0 & 1  \\ 
+ pziprural & 0.089 & 0.198 & 0 & 1  \\ 
+ 1=Have ZIP code data & 0.957 & 0.204 & 0 & 1  \\ 
+ 

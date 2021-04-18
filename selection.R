@@ -87,7 +87,7 @@ bestweight <- exdat %>% dplyr::select(complete,popwt)
 
 set.seed(123)
 
-cv.lasso <- cv.glmnet(x = exmat,y = bestweight[,1], alpha = 1, family= "binomial",
+cv.lasso <- cv.glmnet(x = exmat,y = bestweight[,1], alpha = 1, family="binomial",
                       weights=bestweight[,2],
                       lambda = NULL)
 
@@ -172,25 +172,52 @@ ggplot() +
 write.csv(demeans,"~/covid-survey/demeanrp-lasso.csv")
 write.csv(demeans,"C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID-shared/intermediate-files/demeanrp-lasso.csv")
 
-stargazer(a,type="text")
+
+######## make coef table ##########
+
+var.order <-  scan("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/do-files/ESTUNIVERSESEL_list.txt",what=character())
+var.order <- str_replace_all(var.order,"_",":")
+
+
+
+
+lassocoef <- stargazer(b,type="latex",no.space=T,order=var.order,single.row=T) %>% str_replace_all(":"," $\\\\times$ ") %>% fixnames2()
+
+lassocoef <- str_replace_all(lassocoef," \\("," & (") %>% str_remove_all("\\(|\\)") 
+
+write(lassocoef,"~/covid-survey/tables/lassorp.tex")
+
+#######################################
 
 # in-sample accuracy
 weighted.mean(round(b$fitted.values)==bestweight[,1], w=bestweight[,2])
 
-varlist <- names(b$coefficients)
-for (i in nrow(varlabs):1) {
-  #if(str_detect(varlist,paste0("",varlabs$variable[i]))) {
-    varlist <- str_replace_all(varlist,varlabs$variable[i],varlabs$label[i])
-  
+##########################################
+
+######## descriptive stats ############
+
+varlist <- data.frame(variable=names(b$coefficients),v2=NA)
+varlist <- varlist[which(!str_detect(varlist$variable,":")),]
+varlist$variable <- as.character(varlist$variable)
+varlist <- left_join(varlist,varlabs)
+varlist <- varlist %>% dplyr::filter(variable!="(Intercept)")
+
+for (i in 1:nrow(varlist)) {
+  if (length(which(var.order == varlist$variable[i]))>0) {
+  varlist$v2[i] <- which(var.order == varlist$variable[i])
+  }
 }
+
+varlist <- varlist[order(varlist$v2),]
+
 
 # make descriptive statistics
 
-v <- names(b$coefficients)
+v <- varlist$variable
 
 t <- c()
 
-for (i in 2:length(v)) {
+for (i in 1:length(v)) {
   
   if (v[i] %in% names(exdat)) {
   
@@ -199,37 +226,34 @@ for (i in 2:length(v)) {
          min(exdat[which(exdat$complete==1),which(names(exdat)==v[i])]),
          max(exdat[which(exdat$complete==1),which(names(exdat)==v[i])])) %>% round(3)
   
-  } else {
-    
-    v[i] <- paste0(str_split_fixed(v[i],":",n=2)[[2]],":",str_split_fixed(v[i],":",n=2)[[1]])
-    
-    r <- c(mean(exdat[which(exdat$complete==1),which(names(exdat)==v[i])]),
-           sd(exdat[which(exdat$complete==1),which(names(exdat)==v[i])]),
-           min(exdat[which(exdat$complete==1),which(names(exdat)==v[i])]),
-           max(exdat[which(exdat$complete==1),which(names(exdat)==v[i])])) %>% round(3)
-  }
+  } 
   
-  r <- c(v[i],r)
+  if (!is.na(varlist$label[i])) {
+  
+  r <- c(varlist$label[i],r)
+  
+  } else {
+    r <- c(varlist$variable[i],r)
+  }
   r <- r %>% paste(collapse= " & ") %>% paste(" \\\\ \n ")
   
   t <- paste0(t,r)
   
 }
 
- for (i in 1:nrow(varlabs)) {
-   t <- str_replace_all(t,varlabs$variable[i],varlabs$label[i])
- }
 
 cat(t)
 
-longhead <- read_file("~/covid-survey/tables/longtableheader.txt")
-longfoot <- read_file("~/covid-survey/tables/longtablefooter.txt")
+# longhead <- read_file("~/covid-survey/tables/longtableheader.txt")
+# longfoot <- read_file("~/covid-survey/tables/longtablefooter.txt")
+# 
+# s <- paste0(longhead,t,longfoot)
+# cat(s)
+write(t,"~/covid-survey/tables/selection-desc.tex")
 
-s <- paste0(longhead,t,longfoot)
-cat(s)
-write(s,"~/covid-survey/tables/selection-desc.tex")
 
-
+# not using this
+{
 
 ############## Elastic Net ##################
 
@@ -336,3 +360,5 @@ d1$fitted <- fitted.values(a)
 
 summary(a$fitted.values)
 summary(round(d1$fitted) == d1$y)
+
+}
