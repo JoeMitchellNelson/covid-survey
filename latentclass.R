@@ -6,6 +6,10 @@ p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
        xtable,knitr,magick,purrr,ggthemes,gifski,extrafont,latex2exp,
        cowplot,mapproj,patchwork,remotes,tictoc,Hmisc,english,readstata13,gmnl,poLCA)
 
+install.packages("https://cran.r-project.org/src/contrib/Archive/mlogit/mlogit_1.0-2.tar.gz", repos=NULL,type="source")
+library(mlogit)
+
+#################### READ IN DATA ################
 {
   
   newdemean <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID-shared/intermediate-files/demeanrp-lasso.csv")[,-1]
@@ -21,7 +25,6 @@ p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
     dplyr::filter(rejectever==0) 
   
   dat$owninc <- ifelse(dat$owninc==0,NA,dat$owninc)
-  dat$caseid <- as.numeric(dat2$ResponseId)
   
   
   dat2 <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.dta")
@@ -137,13 +140,40 @@ p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
   dat$threealts2 <- ifelse(dat$threealts==0,"Alts2","Alts3") %>% as.factor()
   
   
+  dat <- dummy_cols(dat,
+                    select_columns=c("rule1","rule2","rule3","rule4","rule5","rule6","rule7","rule8","rule9","rule10"),
+                    remove_first_dummy = T)
   
+  names(dat) <- names(dat) %>% str_replace_all("_",".")
+  
+  
+}
+
+
+################ CREATE RP INTERACTIONS ############
+
+BV <- c("mabsdeaths", "mabscases",
+        "feduinoneavcost", "feduianyavcost", 
+        "feduinoneunempl", "feduianyunempl", 
+        "rule1", "rule2",
+        "rule3", "rule4",
+        "rule5", "rule6",
+        "rule7", "rule8",
+        "rule9", "rule10",
+        "statquo")
+
+for (i in 1:length(BV)) {
+  
+  dat$newvar <- as.numeric(as.matrix(dat[,which(names(dat)==BV[i])])) * as.numeric(dat$lassorpfl) 
+  names(dat)[which(names(dat)=="newvar")] <- paste0("RP",BV[i])
   
 }
 
 
 set.seed(123)
 
+# dat2$mabsdeaths <- dat2$mabsdeaths * -1
+# dat2$mabscases <- dat2$mabscases * -1
 dat2 <- dat[sample(1:nrow(dat)),] %>% arrange(ResponseId,choiceofperson)
 dat2 <- dat2 %>% dplyr::select(ResponseId,choiceofperson,choice,
                                best,popwt,
@@ -156,32 +186,65 @@ dat2 <- dat2 %>% dplyr::select(ResponseId,choiceofperson,choice,
                                rule7, rule8,
                                rule9, rule10,
                                statquo,
+                               
+                               RPmabsdeaths, RPmabscases,
+                               RPfeduinoneavcost, RPfeduianyavcost, 
+                               RPfeduinoneunempl, RPfeduianyunempl, 
+                               RPrule1, RPrule2,
+                               RPrule3, RPrule4,
+                               RPrule5, RPrule6,
+                               RPrule7, RPrule8,
+                               RPrule9, RPrule10,
+                               RPstatquo,
+                               
                                lassorpfl,
                                choice,
                                alt,
                                caseid,
                                female,ideolcon,ideollib)
 
-#dat2$choice <- 1:nrow(dat2)
 dat2$caseid <- as.numeric(dat2$ResponseId)
-
-
-write.csv(dat,"~/covid-survey/data/for_stata_lclogit.csv")
-
-install.packages("https://cran.r-project.org/src/contrib/Archive/mlogit/mlogit_1.0-2.tar.gz", repos=NULL,type="source")
-library(mlogit)
-
-tcodes <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/number_non-varying.csv")
-
-#dat3 <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/forR_VSL-COVID_two-alt_long.csv")
-dat <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/forR_VSL-COVID_two-alt_long.dta")
-
 dat2$alt <- ifelse(dat2$alt==3,2,1)
 
-dat3 <- mlogit.data(dat2, chid.var = "choice", id.var="caseid", alt.var="alt", choice = "best", varying = tcodes[,3]:tcodes[,4], shape = "long", sep = "")
+
+#write.csv(dat,"~/covid-survey/data/for_stata_lclogit.csv")
+
+
+
+#tcodes <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/number_non-varying.csv")
+
+#dat3 <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/forR_VSL-COVID_two-alt_long.csv")
+#dat <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/forR_VSL-COVID_two-alt_long.dta")
+
+
+#dat3 <- mlogit.data(dat2, chid.var = "choice", id.var="caseid", alt.var="alt", choice = "best", varying = tcodes[,3]:tcodes[,4], shape = "long", sep = "")
 
 dat3 <- mlogit.data(dat2, chid.var = "choice", id.var="caseid", alt.var="alt", choice = "best", varying = c(3,6:ncol(dat2)), shape = "long", sep = "")
 
+ranp1 = c(
+  mabsdeaths = "n", 
+    mabscases = "n",
+    feduinoneavcost = "n", feduianyavcost = "n", 
+    feduinoneunempl = "n", feduianyunempl = "n", 
+    
+    rule1 = "n", rule2 = "n",
+    rule3 = "n", rule4 = "n",
+    rule5 = "n", rule6 = "n",
+    rule7 = "n", rule8 = "n",
+    rule9 = "n", rule10 = "n",
+    
+    statquo = "n"
+  
+  # RPmabsdeaths= "n", RPmabscases= "n",
+  # RPfeduinoneavcost= "n", RPfeduianyavcost= "n", 
+  # RPfeduinoneunempl= "n", RPfeduianyunempl= "n", 
+  # RPrule1= "n", RPrule2= "n",
+  # RPrule3= "n", RPrule4= "n",
+  # RPrule5= "n", RPrule6= "n",
+  # RPrule7= "n", RPrule8= "n",
+  # RPrule9= "n", RPrule10= "n",
+  # RPstatquo= "n"
+)
 
 lcmodel <- gmnl(best ~ 
                   mabsdeaths + 
@@ -195,11 +258,81 @@ lcmodel <- gmnl(best ~
                    rule7 + rule8 +
                    rule9 + rule10 +
                   
-                 statquo 
+                 statquo +
+                  
+                  RPmabsdeaths +  RPmabscases + 
+                RPfeduinoneavcost +  RPfeduianyavcost +  
+                RPfeduinoneunempl +  RPfeduianyunempl +  
+                RPrule1 +  RPrule2 + 
+                RPrule3 +  RPrule4 + 
+                RPrule5 +  RPrule6 + 
+                RPrule7 +  RPrule8 + 
+                RPrule9 +  RPrule10 + 
+                RPstatquo
                 
-                | 0 | 0 | 0 | 0, data = dat3, model = "mixl",
-                panel = T, Q = 3,seed=123,method="bfgs",ranp=ranp1)
+                | 0 , data = dat3, model = "mixl",
+                panel = T, seed=123,ranp=ranp1,R=10)
+
+
 summary(lcmodel)
+
+ranp2 = c(
+  mabsdeaths = "ln", 
+  mabscases = "ln",
+  feduinoneavcost = "n", feduianyavcost = "n",
+  feduinoneunempl = "n", feduianyunempl = "n",
+
+  rule1 = "n", rule2 = "n",
+  rule3 = "n", rule4 = "n",
+  rule5 = "n", rule6 = "n",
+  rule7 = "n", rule8 = "n",
+  rule9 = "n", rule10 = "n",
+
+  statquo = "n"
+
+  # RPmabsdeaths= "n", RPmabscases= "n",
+  # RPfeduinoneavcost= "n", RPfeduianyavcost= "n",
+  # RPfeduinoneunempl= "n", RPfeduianyunempl= "n",
+  # RPrule1= "n", RPrule2= "n",
+  # RPrule3= "n", RPrule4= "n",
+  # RPrule5= "n", RPrule6= "n",
+  # RPrule7= "n", RPrule8= "n",
+  # RPrule9= "n", RPrule10= "n",
+  # RPstatquo= "n"
+)
+
+lcmodel2 <- gmnl(best ~ 
+                  mabsdeaths + 
+                  mabscases +
+                  feduinoneavcost + feduianyavcost + 
+                  feduinoneunempl + feduianyunempl + 
+                  
+                  rule1 + rule2 +
+                  rule3 + rule4 +
+                  rule5 + rule6 +
+                  rule7 + rule8 +
+                  rule9 + rule10 +
+                  
+                  statquo +
+                  
+                  RPmabsdeaths +  RPmabscases + 
+                  RPfeduinoneavcost +  RPfeduianyavcost +  
+                  RPfeduinoneunempl +  RPfeduianyunempl +  
+                  RPrule1 +  RPrule2 + 
+                  RPrule3 +  RPrule4 + 
+                  RPrule5 +  RPrule6 + 
+                  RPrule7 +  RPrule8 + 
+                  RPrule9 +  RPrule10 + 
+                  RPstatquo
+                
+                | 0 , data = dat3, model = "mixl",
+                panel = T, seed=123,ranp=ranp2,R=10,start=c(1,rep(0,32),1,1),
+                print.init=T)
+
+
+summary(lcmodel2)
+
+stargazer(lcmodel)
 s <- shares(lcmodel)
 s
 
