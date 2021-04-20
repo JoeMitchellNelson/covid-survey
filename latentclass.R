@@ -1,20 +1,22 @@
+install.packages("https://cran.r-project.org/src/contrib/Archive/mlogit/mlogit_1.0-2.tar.gz", repos=NULL,type="source")
+library(mlogit)
+
 require(pacman)
 
 p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
        rvest,stringr,Hmisc,rattle,RColorBrewer,ddpcr,tidytext,tidyr,
        ggrepel,ggplot2,png,ggpubr,tidycensus,sf,plm,lmtest,stargazer,MASS,
        xtable,knitr,magick,purrr,ggthemes,gifski,extrafont,latex2exp,
-       cowplot,mapproj,patchwork,remotes,tictoc,Hmisc,english,readstata13,gmnl,poLCA)
+       cowplot,mapproj,patchwork,remotes,tictoc,Hmisc,english,readstata13,gmnl,poLCA,fastDummies)
 
-install.packages("https://cran.r-project.org/src/contrib/Archive/mlogit/mlogit_1.0-2.tar.gz", repos=NULL,type="source")
-library(mlogit)
+
 
 #################### READ IN DATA ################
 {
   
-  newdemean <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID-shared/intermediate-files/demeanrp-lasso.csv")[,-1]
-  cmatch <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID-shared/intermediate-files/countymatch.csv")[,-1]
-  dat <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.csv") %>% 
+  newdemean <- read.csv("C:/Users/joe/Dropbox (University of Oregon)/VSL-COVID-shared/intermediate-files/demeanrp-lasso.csv")[,-1]
+  cmatch <- read.csv("C:/Users/joe/Dropbox (University of Oregon)/VSL-COVID-shared/intermediate-files/countymatch.csv")[,-1]
+  dat <- read.csv("C:/Users/joe/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.csv") %>% 
     # dplyr::filter(rejectonly==0) %>% 
     dplyr::filter(Durationinseconds > 360) %>% 
     dplyr::filter(choiceofperson %in% 1:2) %>% 
@@ -27,7 +29,7 @@ library(mlogit)
   dat$owninc <- ifelse(dat$owninc==0,NA,dat$owninc)
   
   
-  dat2 <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.dta")
+  #dat2 <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.dta")
   
   ethnic <- read.csv("~/covid-survey/data/countyethfrac.csv")[,-1]
   
@@ -172,8 +174,7 @@ for (i in 1:length(BV)) {
 
 set.seed(123)
 
-# dat2$mabsdeaths <- dat2$mabsdeaths * -1
-# dat2$mabscases <- dat2$mabscases * -1
+
 dat2 <- dat[sample(1:nrow(dat)),] %>% arrange(ResponseId,choiceofperson)
 dat2 <- dat2 %>% dplyr::select(ResponseId,choiceofperson,choice,
                                best,popwt,
@@ -203,9 +204,11 @@ dat2 <- dat2 %>% dplyr::select(ResponseId,choiceofperson,choice,
                                caseid,
                                female,ideolcon,ideollib)
 
-dat2$caseid <- as.numeric(dat2$ResponseId)
+dat2$caseid <- as.numeric(as.factor(dat2$ResponseId))
 dat2$alt <- ifelse(dat2$alt==3,2,1)
 
+dat2$mabsdeaths <- dat2$mabsdeaths * -1
+dat2$mabscases <- dat2$mabscases * -1
 
 #write.csv(dat,"~/covid-survey/data/for_stata_lclogit.csv")
 
@@ -326,11 +329,15 @@ lcmodel2 <- gmnl(best ~
                   RPstatquo
                 
                 | 0 , data = dat3, model = "mixl",
-                panel = T, seed=123,ranp=ranp2,R=10,start=c(1,rep(0,32),1,1),
+                panel = T, seed=666,ranp=ranp2,R=10,
                 print.init=T)
 
 
 summary(lcmodel2)
+
+save(lcmodel,file="~/covid-survey/mixl1.RData")
+save(lcmodel2,file="~/covid-survey/mixl2.RData")
+
 
 stargazer(lcmodel)
 s <- shares(lcmodel)
