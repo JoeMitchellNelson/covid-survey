@@ -4,7 +4,7 @@ p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
        rvest,stringr,Hmisc,rattle,RColorBrewer,ddpcr,tidytext,tidyr,
        ggrepel,ggplot2,png,ggpubr,tidycensus,sf,plm,lmtest,stargazer,MASS,
        xtable,knitr,magick,purrr,ggthemes,gifski,extrafont,latex2exp,
-       cowplot,mapproj,patchwork,remotes,tictoc,Hmisc,english,readstata13,gmnl,poLCA)
+       cowplot,mapproj,patchwork,remotes,tictoc,Hmisc,english,readstata13,gmnl,poLCA,haven)
 
 install.packages("https://cran.r-project.org/src/contrib/Archive/mlogit/mlogit_1.0-2.tar.gz", repos=NULL,type="source")
 library(mlogit)
@@ -200,14 +200,39 @@ dat2 <- dat2 %>% dplyr::select(ResponseId,choiceofperson,choice,
                                lassorpfl,
                                choice,
                                alt,
-                               caseid,
-                               female,ideolcon,ideollib)
+                               caseid)
 
 dat2$caseid <- as.numeric(dat2$ResponseId)
 dat2$alt <- ifelse(dat2$alt==3,2,1)
 
+#labels for export to stata
+{
+labsdat <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/variables_for_selection_models.dta")
 
-#write.csv(dat,"~/covid-survey/data/for_stata_lclogit.csv")
+labs <- data.frame(variable = names(labsdat),label=attributes(labsdat)$var.labels)
+labs$variable <- as.character(labs$variable)
+labs$label <- as.character(labs$label)
+
+fort <- data.frame(variable = names(dat2),v1=NA,v2=NA)
+fort$v1 <- fort$variable %>% str_remove_all("RP")
+fort$v2 <- ifelse(str_detect(fort$variable,"RP"),"$\\times$ Response propensity","")
+fort <- left_join(fort,varlabs,by=c("v1"="variable"))
+
+fort$label <- paste0(fort$label," ",fort$v2)
+
+statacode <- ""
+
+for (i in 1:nrow(fort)) {
+  temp <- paste0("label variable ",fort$variable[i]," \"",fort$label[i],"\"","\n")
+  statacode <- paste0(statacode,temp)
+}
+
+cat(statacode)
+
+#write_dta(dat2,"~/covid-survey/data/for_stata_lclogit.dta")
+
+}
+
 
 
 
@@ -222,18 +247,18 @@ dat2$alt <- ifelse(dat2$alt==3,2,1)
 dat3 <- mlogit.data(dat2, chid.var = "choice", id.var="caseid", alt.var="alt", choice = "best", varying = c(3,6:ncol(dat2)), shape = "long", sep = "")
 
 ranp1 = c(
-  mabsdeaths = "n", 
-    mabscases = "n",
+ # mabsdeaths = "n", 
+  #  mabscases = "n",
     feduinoneavcost = "n", feduianyavcost = "n", 
-    feduinoneunempl = "n", feduianyunempl = "n", 
-    
-    rule1 = "n", rule2 = "n",
-    rule3 = "n", rule4 = "n",
-    rule5 = "n", rule6 = "n",
-    rule7 = "n", rule8 = "n",
-    rule9 = "n", rule10 = "n",
-    
-    statquo = "n"
+    feduinoneunempl = "n", feduianyunempl = "n" 
+    # 
+    # rule1 = "n", rule2 = "n",
+    # rule3 = "n", rule4 = "n",
+    # rule5 = "n", rule6 = "n",
+    # rule7 = "n", rule8 = "n",
+    # rule9 = "n", rule10 = "n",
+    # 
+    # statquo = "n"
   
   # RPmabsdeaths= "n", RPmabscases= "n",
   # RPfeduinoneavcost= "n", RPfeduianyavcost= "n", 
@@ -271,24 +296,24 @@ lcmodel <- gmnl(best ~
                 RPstatquo
                 
                 | 0 , data = dat3, model = "mixl",
-                panel = T, seed=123,ranp=ranp1,R=10)
+                panel = T, seed=123,ranp=ranp1,R=100)
 
 
 summary(lcmodel)
 
 ranp2 = c(
-  mabsdeaths = "ln", 
-  mabscases = "ln",
+  mabsdeathsnegative = "ln", 
+  mabscasesnegative = "ln",
   feduinoneavcost = "n", feduianyavcost = "n",
-  feduinoneunempl = "n", feduianyunempl = "n",
+  feduinoneunempl = "n", feduianyunempl = "n"
 
-  rule1 = "n", rule2 = "n",
-  rule3 = "n", rule4 = "n",
-  rule5 = "n", rule6 = "n",
-  rule7 = "n", rule8 = "n",
-  rule9 = "n", rule10 = "n",
-
-  statquo = "n"
+  # rule1 = "n", rule2 = "n",
+  # rule3 = "n", rule4 = "n",
+  # rule5 = "n", rule6 = "n",
+  # rule7 = "n", rule8 = "n",
+  # rule9 = "n", rule10 = "n",
+  # 
+  # statquo = "n"
 
   # RPmabsdeaths= "n", RPmabscases= "n",
   # RPfeduinoneavcost= "n", RPfeduianyavcost= "n",
@@ -301,9 +326,17 @@ ranp2 = c(
   # RPstatquo= "n"
 )
 
+dat2$mabscasesnegative <- dat2$mabscases * -1
+dat2$mabsdeathsnegative <- dat2$mabsdeaths * -1
+dat2$RPmabscasesnegative <- dat2$RPmabscases * -1
+dat2$RPmabsdeathsnegative <- dat2$RPmabsdeaths * -1
+
+dat4 <- mlogit.data(dat2, chid.var = "choice", id.var="caseid", alt.var="alt", choice = "best", varying = c(3,6:ncol(dat2)), shape = "long", sep = "")
+
+
 lcmodel2 <- gmnl(best ~ 
-                  mabsdeaths + 
-                  mabscases +
+                  mabsdeathsnegative + 
+                  mabscasesnegative +
                   feduinoneavcost + feduianyavcost + 
                   feduinoneunempl + feduianyunempl + 
                   
@@ -315,7 +348,7 @@ lcmodel2 <- gmnl(best ~
                   
                   statquo +
                   
-                  RPmabsdeaths +  RPmabscases + 
+                  RPmabsdeathsnegative +  RPmabscasesnegative + 
                   RPfeduinoneavcost +  RPfeduianyavcost +  
                   RPfeduinoneunempl +  RPfeduianyunempl +  
                   RPrule1 +  RPrule2 + 
@@ -325,8 +358,8 @@ lcmodel2 <- gmnl(best ~
                   RPrule9 +  RPrule10 + 
                   RPstatquo
                 
-                | 0 , data = dat3, model = "mixl",
-                panel = T, seed=123,ranp=ranp2,R=10,start=c(1,rep(0,32),1,1),
+                | 0 , data = dat4, model = "mixl",
+                panel = T, seed=123,ranp=ranp2,R=100,
                 print.init=T)
 
 

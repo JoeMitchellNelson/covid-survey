@@ -10,7 +10,11 @@ p_load(glmnet,tibble,broom,caret,h2o)
 
 
 
+labsdat <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/variables_for_selection_models.dta")
 
+labs <- data.frame(variable = names(labsdat),label=attributes(labsdat)$var.labels)
+labs$variable <- as.character(labs$variable)
+labs$label <- as.character(labs$label)
 
 completes <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.csv") %>%
   # dplyr::filter(rejectonly==0) %>%
@@ -175,16 +179,39 @@ write.csv(demeans,"C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID-shared
 
 ######## make coef table ##########
 
+
+fixnamesselect <- function (x) {
+  x <- paste(x,collapse="\n")
+  
+  
+  for (i in nrow(labs):1) {
+    if(str_detect(x,paste0("",labs$variable[i]))) {
+      x <- str_replace_all(x,labs$variable[i],labs$label[i])
+    }
+  }
+  
+  x <- str_replace_all(x," numberernative","")
+  x <- str_replace_all(x," w/ any attrib.","")
+  x <- str_replace_all(x,"1=Non-zero federal UI policy","$\\\\quad \\\\times$ 1=Non-zero federal UI")
+  x <- str_remove_all(x,":Unempl rate for county")
+  x <- str_remove_all(x,"Avg. hhld cost for county:")
+  # x <- str_replace_all(x," & & \\\\\\\\"," & & \\\\\\\\[-1.2ex]")
+  # x <- str_replace_all(x,"\\[-1.8ex]","\\\\")
+  
+  x
+}
+
 var.order <-  scan("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/do-files/ESTUNIVERSESEL_list.txt",what=character())
 var.order <- str_replace_all(var.order,"_",":")
 
 
 
 
-lassocoef <- stargazer(b,type="latex",no.space=T,order=var.order,single.row=T) %>% str_replace_all(":"," $\\\\times$ ") %>% fixnames2()
+lassocoef <- stargazer(b,type="latex",no.space=T,order=var.order,single.row=T) %>% str_replace_all(":"," $\\\\times$ ") %>% fixnamesselect()
 
-lassocoef <- str_replace_all(lassocoef," \\("," & (") %>% str_remove_all("\\(|\\)") 
-
+lassocoef <- str_replace_all(lassocoef," \\((?=[:digit:])"," & (") %>% str_remove_all("race 1=Own ")
+#%>% str_remove_all("\\(|\\)") 
+cat(lassocoef)
 write(lassocoef,"~/covid-survey/tables/lassorp.tex")
 
 #######################################
@@ -199,7 +226,7 @@ weighted.mean(round(b$fitted.values)==bestweight[,1], w=bestweight[,2])
 varlist <- data.frame(variable=names(b$coefficients),v2=NA)
 varlist <- varlist[which(!str_detect(varlist$variable,":")),]
 varlist$variable <- as.character(varlist$variable)
-varlist <- left_join(varlist,varlabs)
+varlist <- left_join(varlist,labs)
 varlist <- varlist %>% dplyr::filter(variable!="(Intercept)")
 
 for (i in 1:nrow(varlist)) {

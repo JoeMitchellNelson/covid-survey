@@ -14,6 +14,8 @@ cmatch <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID-share
 dat <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.csv") %>% dplyr::filter(rejectonly==0) 
 dat2 <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.dta")
 
+
+
 ethnic <- read.csv("~/covid-survey/data/countyethfrac.csv")[,-1]
 
 varlabs <- data.frame(variable = names(dat),label= attributes(dat2)$var.labels)
