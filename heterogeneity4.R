@@ -1010,8 +1010,8 @@ summary(clogit(best ~ mabsdeaths*lassorpfl + mabscases*lassorpfl +
 ############################################################
 
 df <- dat
-fac <- c("age","race")
-drop=NA
+fac <- c("ideol2","education","income")
+drop <- "MISSING"
 
 
 
@@ -1089,7 +1089,7 @@ maketable3 <- function (fac,df,drop=c("MISSING")) {
                  rule6.2:lassorpfl + rule7.2:lassorpfl + rule8.2:lassorpfl + rule9.2:lassorpfl + rule10.2:lassorpfl +
                  
                  rule2.3:lassorpfl + rule3.3:lassorpfl +rule4.3:lassorpfl +rule5.3:lassorpfl + 
-                 rule6.3:lassorpfl + rule7.3:lassorpfl + rule8.3:lassorpfl + rule9.3 + rule10.3:lassorpfl +
+                 rule6.3:lassorpfl + rule7.3:lassorpfl + rule8.3:lassorpfl + rule9.3:lassorpfl + rule10.3:lassorpfl +
                  statquo:lassorpfl 
                
                + 0,data = df)
@@ -1152,7 +1152,10 @@ hettable1 <- maketable3(c("age","race","gender"),dat,drop=c("NonBinary","MISSING
   str_replace_all("\\\\hline \\\\\\\\\\[-1.8ex\\] \n Absolute deaths","\n Absolute deaths") %>% 
   str_replace_all(":lassorpfl"," $\\\\times$ RP")
 
+cat(hettable1)
+
 write(hettable1,file="~/covid-survey/tables/hettable1_993_norestr_APPENDIX.tex")
+
 
 
 hettable2 <- maketable3(c("ideol2","education","income"),dat,drop=c("MISSING")) %>% 
@@ -1177,4 +1180,13 @@ hettable2 <- maketable3(c("ideol2","education","income"),dat,drop=c("MISSING")) 
 cat(hettable2)
 
 write(hettable2,file="~/covid-survey/tables/hettable2_993_norestr_APPENDIX.tex")
+
+
+
+
+
+
+
+
+
 
