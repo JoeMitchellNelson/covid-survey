@@ -4,7 +4,7 @@ p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
        rvest,stringr,Hmisc,rattle,RColorBrewer,ddpcr,tidytext,tidyr,
        ggrepel,ggplot2,png,ggpubr,tidycensus,sf,plm,lmtest,stargazer,MASS,
        xtable,knitr,magick,purrr,ggthemes,gifski,extrafont,latex2exp,
-       cowplot,mapproj,patchwork,remotes,tictoc,Hmisc,english,readstata13,gmnl,poLCA,haven)
+       cowplot,mapproj,patchwork,remotes,tictoc,Hmisc,english,readstata13,gmnl,poLCA,haven,nnet)
 
 install.packages("https://cran.r-project.org/src/contrib/Archive/mlogit/mlogit_1.0-2.tar.gz", repos=NULL,type="source")
 library(mlogit)
@@ -301,6 +301,7 @@ lcmodel <- gmnl(best ~
 
 summary(lcmodel)
 
+
 ranp2 = c(
   mabsdeathsnegative = "ln", 
   mabscasesnegative = "ln",
@@ -439,3 +440,29 @@ s %*% lcmodel$coefficients[which(str_detect(names(lcmodel$coefficients),"feduino
 WTPs <- -lcmodel$coefficients[which(str_detect(names(lcmodel$coefficients),"mabsdeaths"))]/lcmodel$coefficients[which(str_detect(names(lcmodel$coefficients),"feduinoneavcost"))]
 WTPs %*% s
 WTPs
+
+summary(lm(avcost ~ unempl*countyname,data=dat[which(dat$alt!=3),]))
+
+############## Ordered logit, politics ~ other sociodemos #####################
+
+forolo <- dat %>% group_by(ResponseId) %>% summarise(ideol2=first(ideol2),
+                                                     gender=first(gender),
+                                                     age=first(age),
+                                                     income=first(income),
+                                                     race=first(race),
+                                                     education=first(education))
+forolo$ideol2 <- relevel(forolo$ideol2, ref = "moderate")
+forolo$age <- relevel(forolo$age, ref = "35to64")
+forolo$race <- relevel(forolo$race, ref = "White")
+
+
+
+a <- multinom(ideol2 ~ age + gender + race + income + race + education,data=forolo)
+
+summary(a)
+summary(multinom(ideol2 ~ age,data=forolo))
+summary(lm(I(ideol2=="conservative") ~ gender,data=forolo))
+
+stargazer(a,type="text")
+
+forolo %>% group_by(income,ideol2) %>% summarise(n=n())
