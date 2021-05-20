@@ -3,7 +3,7 @@ require(pacman)
 p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
        rvest,stringr,Hmisc,rattle,RColorBrewer,ddpcr,tidytext,tidyr,
        ggrepel,ggplot2,png,ggpubr,tidycensus,sf,plm,lmtest,stargazer,MASS,
-       xtable,knitr,magick,purrr,ggthemes,gifski,extrafont,latex2exp,
+       xtable,knitr,magick,purrr,ggthemes,gifski,extrafont,latex2exp,fastDummies,Hmisc,
        cowplot,mapproj,patchwork,remotes,tictoc,Hmisc,english,readstata13,gmnl,poLCA,haven,nnet,evd)
 
 
@@ -149,10 +149,35 @@ set.seed(665)
   
 }
 
+dat$costbin <- cut2(dat$avcost,g=7)
+dat$nonebin <- as.numeric(dat$costbin) * dat$feduinone
+dat$anybin <- as.numeric(dat$costbin) * dat$feduiany
+
 
 main3b <- clogit(best ~
                    mabsdeaths*lassorpfl + mabscases*lassorpfl +
-                   feduinoneavcost*lassorpfl + feduianyavcost*lassorpfl + 
+                   factor(nonebin)*lassorpfl + factor(anybin)*lassorpfl +
+                   feduinoneunempl*lassorpfl + feduianyunempl*lassorpfl + 
+                   
+
+                   factor(rule1)*lassorpfl + factor(rule2)*lassorpfl +
+                   factor(rule3)*lassorpfl + factor(rule4)*lassorpfl +
+                   factor(rule5)*lassorpfl + factor(rule6)*lassorpfl +
+                   factor(rule7)*lassorpfl + factor(rule8)*lassorpfl +
+                   factor(rule9)*lassorpfl + factor(rule10)*lassorpfl +
+                   
+                   statquo*lassorpfl +
+                   strata(choice),data=dat[which(dat$choiceofperson %in% 1:2),]
+                 ,weights=popwt,method="approximate"
+)
+
+
+summary(main3b)
+
+main3b <- clogit(best ~
+                   mabsdeaths*lassorpfl + mabscases*lassorpfl +
+                   I(feduinoneavcost)*lassorpfl + I(feduianyavcost)*lassorpfl +
+                   I(feduinoneavcost^2)*lassorpfl + I(feduianyavcost^2)*lassorpfl +
                    feduinoneunempl*lassorpfl + feduianyunempl*lassorpfl + 
                    
                    factor(rule1)*lassorpfl + factor(rule2)*lassorpfl +
@@ -167,6 +192,8 @@ main3b <- clogit(best ~
 )
 
 
+summary(main3b)
+
 
 
 ####################################################
@@ -177,8 +204,11 @@ main3b <- clogit(best ~
 
 dat$u <- fitted.values(main3b) - 
   main3b$coefficients[["feduianyavcost"]]*dat$feduianyavcost - 
+  main3b$coefficients[["feduinoneavcost"]]*dat$feduinoneavcost - 
   main3b$coefficients[["feduinoneunempl"]]*dat$feduinoneunempl +
-  -0.2*dat$feduianyavcost + -0.2*dat$feduinoneunempl
+  -0.2*sqrt(dat$feduianyavcost) + 
+  -0.2*sqrt(dat$feduinoneavcost) + 
+  -0.2*dat$feduinoneunempl
 
 dat$u <- dat$u + rgumbel(nrow(dat))
 
@@ -204,13 +234,32 @@ dat <- dat %>% group_by(choice) %>% mutate(best = ifelse(u==max(u),1,0)) %>% ung
 
 fakemain$coefficients
 
-res <- data.frame(fakemain$coefficients %>% t())
+res <- data.frame(c(fakemain$coefficients,broom::tidy(fakemain)$p.value[4:5]) %>% t())
 
 for (i in 1:500) {
+  # linear utility over income
+  # dat$u <- fitted.values(main3b) - 
+  #   main3b$coefficients[["feduianyavcost"]]*dat$feduianyavcost - 
+  #   main3b$coefficients[["feduinoneunempl"]]*dat$feduinoneunempl +
+  #   -0.2*dat$feduianyavcost + -0.2*dat$feduinoneunempl
+  
+  # sqrt utility over income
+  # dat$u <- fitted.values(main3b) - 
+  #   main3b$coefficients[["feduianyavcost"]]*dat$feduianyavcost - 
+  #   main3b$coefficients[["feduinoneavcost"]]*dat$feduinoneavcost - 
+  #   main3b$coefficients[["feduinoneunempl"]]*dat$feduinoneunempl +
+  #   3*sqrt(dat$inccont/12 - dat$feduianyavcost/10) + 
+  #   3*sqrt(dat$inccont/12 - dat$feduinoneavcost/10) + 
+  #   -0.2*dat$feduinoneunempl
+  
+  # convex (dis)utility over lost income
   dat$u <- fitted.values(main3b) - 
     main3b$coefficients[["feduianyavcost"]]*dat$feduianyavcost - 
+    main3b$coefficients[["feduinoneavcost"]]*dat$feduinoneavcost - 
     main3b$coefficients[["feduinoneunempl"]]*dat$feduinoneunempl +
-    -0.2*dat$feduianyavcost + -0.2*dat$feduinoneunempl
+    -1*(dat$feduianyavcost)^1.2 + 
+    -1*( dat$feduinoneavcost)^1.2 + 
+    -0.2*dat$feduinoneunempl
   
   dat$u <- dat$u + rgumbel(nrow(dat))
   
@@ -234,9 +283,14 @@ for (i in 1:500) {
                      ,weights=popwt,method="approximate"
   )
   
-  res <- rbind(res,data.frame(t(fakemain$coefficients)))
+  broom::tidy(fakemain)$p.value[4:5]
+  
+  res <- rbind(res,data.frame(c(fakemain$coefficients,broom::tidy(fakemain)$p.value[4:5]) %>% t()))
 }
-summary(res)
+
+res <- res[-1,]
+
+summary(res[,1:7])
 
 
 ggplot(res) + 
@@ -257,6 +311,13 @@ ggplot(res) +
 ggplot(res) +
   geom_density(aes(x=mabscases)) +
   geom_vline(xintercept=0,linetype="dashed")
+
+res$bothsig <- ifelse(res$V74 < 0.05 & res$V75 < 0.05, 1,0)
+
+ggplot(res) +
+  geom_point(aes(x=feduianyavcost, y=feduinoneavcost,color=bothsig)) +
+  geom_vline(xintercept=0) +
+  geom_hline(yintercept=0)
 
 sum(res$feduinoneavcost < 0)/nrow(res)
 sum(res$feduianyavcost < 0)/nrow(res)
