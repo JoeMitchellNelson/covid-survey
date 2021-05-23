@@ -12,9 +12,9 @@ library(mlogit)
 #################### READ IN DATA ################
 {
   
-  newdemean <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID-shared/intermediate-files/demeanrp-lasso.csv")[,-1]
-  cmatch <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID-shared/intermediate-files/countymatch.csv")[,-1]
-  dat <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.csv") %>% 
+  newdemean <- read.csv("C:/Users/joe/Dropbox (University of Oregon)/VSL-COVID-shared/intermediate-files/demeanrp-lasso.csv")[,-1]
+  cmatch <- read.csv("C:/Users/joe/Dropbox (University of Oregon)/VSL-COVID-shared/intermediate-files/countymatch.csv")[,-1]
+  dat <- read.csv("C:/Users/joe/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.csv") %>% 
     # dplyr::filter(rejectonly==0) %>% 
     dplyr::filter(Durationinseconds > 360) %>% 
     dplyr::filter(choiceofperson %in% 1:2) %>% 
@@ -27,7 +27,7 @@ library(mlogit)
   dat$owninc <- ifelse(dat$owninc==0,NA,dat$owninc)
   
   
-  dat2 <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.dta")
+  dat2 <- read.dta13("C:/Users/joe/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.dta")
   
   ethnic <- read.csv("~/covid-survey/data/countyethfrac.csv")[,-1]
   
@@ -53,7 +53,7 @@ library(mlogit)
   
   varlabs <- rbind(varlabs,newvarlabs)
   
-  dat$mabscases <- dat$mabscases/1000
+  dat$mabscases <- dat$mabscases
   dat$avcost <- dat$avcost/100
   
   dat$state <- ifelse(dat$CA==1,"CA",
@@ -202,7 +202,7 @@ dat2 <- dat2 %>% dplyr::select(ResponseId,choiceofperson,choice,
                                alt,
                                caseid)
 
-dat2$caseid <- as.numeric(dat2$ResponseId)
+dat2$caseid <- as.numeric(as.factor(dat2$ResponseId))
 dat2$alt <- ifelse(dat2$alt==3,2,1)
 
 #labels for export to stata
@@ -247,10 +247,10 @@ cat(statacode)
 dat3 <- mlogit.data(dat2, chid.var = "choice", id.var="caseid", alt.var="alt", choice = "best", varying = c(3,6:ncol(dat2)), shape = "long", sep = "")
 
 ranp1 = c(
- # mabsdeaths = "n", 
-  #  mabscases = "n",
+  mabsdeaths = "n", 
+    mabscases = "n",
     feduinoneavcost = "n", feduianyavcost = "n", 
-    feduinoneunempl = "n", feduianyunempl = "n" 
+    feduinoneunempl = "n", feduianyunempl = "n", 
     # 
     # rule1 = "n", rule2 = "n",
     # rule3 = "n", rule4 = "n",
@@ -258,7 +258,7 @@ ranp1 = c(
     # rule7 = "n", rule8 = "n",
     # rule9 = "n", rule10 = "n",
     # 
-    # statquo = "n"
+     statquo = "n"
   
   # RPmabsdeaths= "n", RPmabscases= "n",
   # RPfeduinoneavcost= "n", RPfeduianyavcost= "n", 
@@ -306,7 +306,7 @@ ranp2 = c(
   mabsdeathsnegative = "ln", 
   mabscasesnegative = "ln",
   feduinoneavcost = "n", feduianyavcost = "n",
-  feduinoneunempl = "n", feduianyunempl = "n"
+  feduinoneunempl = "n", feduianyunempl = "n",
 
   # rule1 = "n", rule2 = "n",
   # rule3 = "n", rule4 = "n",
@@ -314,7 +314,7 @@ ranp2 = c(
   # rule7 = "n", rule8 = "n",
   # rule9 = "n", rule10 = "n",
   # 
-  # statquo = "n"
+   statquo = "n"
 
   # RPmabsdeaths= "n", RPmabscases= "n",
   # RPfeduinoneavcost= "n", RPfeduianyavcost= "n",
