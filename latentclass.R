@@ -3,7 +3,7 @@ require(pacman)
 p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
        rvest,stringr,Hmisc,rattle,RColorBrewer,ddpcr,tidytext,tidyr,
        ggrepel,ggplot2,png,ggpubr,tidycensus,sf,plm,lmtest,stargazer,MASS,
-       xtable,knitr,magick,purrr,ggthemes,gifski,extrafont,latex2exp,
+       xtable,knitr,magick,purrr,ggthemes,gifski,extrafont,latex2exp,fastDummies,
        cowplot,mapproj,patchwork,remotes,tictoc,Hmisc,english,readstata13,gmnl,poLCA,haven,nnet)
 
 install.packages("https://cran.r-project.org/src/contrib/Archive/mlogit/mlogit_1.0-2.tar.gz", repos=NULL,type="source")
@@ -12,9 +12,9 @@ library(mlogit)
 #################### READ IN DATA ################
 {
   
-  newdemean <- read.csv("C:/Users/joe/Dropbox (University of Oregon)/VSL-COVID-shared/intermediate-files/demeanrp-lasso.csv")[,-1]
-  cmatch <- read.csv("C:/Users/joe/Dropbox (University of Oregon)/VSL-COVID-shared/intermediate-files/countymatch.csv")[,-1]
-  dat <- read.csv("C:/Users/joe/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.csv") %>% 
+  newdemean <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID-shared/intermediate-files/demeanrp-lasso.csv")[,-1]
+  cmatch <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID-shared/intermediate-files/countymatch.csv")[,-1]
+  dat <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.csv") %>% 
     # dplyr::filter(rejectonly==0) %>% 
     dplyr::filter(Durationinseconds > 360) %>% 
     dplyr::filter(choiceofperson %in% 1:2) %>% 
@@ -24,10 +24,11 @@ library(mlogit)
     ungroup() %>% 
     dplyr::filter(rejectever==0) 
   
+
   dat$owninc <- ifelse(dat$owninc==0,NA,dat$owninc)
   
   
-  dat2 <- read.dta13("C:/Users/joe/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.dta")
+  dat2 <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.dta")
   
   ethnic <- read.csv("~/covid-survey/data/countyethfrac.csv")[,-1]
   
@@ -215,7 +216,7 @@ labs$label <- as.character(labs$label)
 
 fort <- data.frame(variable = names(dat2),v1=NA,v2=NA)
 fort$v1 <- fort$variable %>% str_remove_all("RP")
-fort$v2 <- ifelse(str_detect(fort$variable,"RP"),"$\\times$ Response propensity","")
+fort$v2 <- ifelse(str_detect(fort$variable,"RP"),"$\\\\times$ Response propensity","")
 fort <- left_join(fort,varlabs,by=c("v1"="variable"))
 
 fort$label <- paste0(fort$label," ",fort$v2)
@@ -227,6 +228,8 @@ for (i in 1:nrow(fort)) {
   statacode <- paste0(statacode,temp)
 }
 
+
+fort$variable <- as.character(fort$variable)
 cat(statacode)
 
 #write_dta(dat2,"~/covid-survey/data/for_stata_lclogit.dta")
@@ -295,7 +298,7 @@ lcmodel <- gmnl(best ~
                 RPrule9 +  RPrule10 + 
                 RPstatquo
                 
-                | 0 , data = dat3, model = "mixl",
+                | 0 , data = dat3, model = "mixl",weights=popwt,
                 panel = T, seed=123,ranp=ranp1,R=100)
 
 
@@ -359,19 +362,154 @@ lcmodel2 <- gmnl(best ~
                   RPrule9 +  RPrule10 + 
                   RPstatquo
                 
-                | 0 , data = dat4, model = "mixl",
-                panel = T, seed=123,ranp=ranp2,R=100,
+                | 0 , data = dat4, model = "mixl",weights=popwt,
+                panel = T, seed=132,ranp=ranp2,R=100,
+                start=startpars,
                 print.init=T)
 
 
 summary(lcmodel2)
 
-stargazer(lcmodel)
-s <- shares(lcmodel)
-s
+startpars <- lcmodel2$coefficients
 
-res <- lcmodel$prob.alt
-summary(res)
+# sample993 <- dat2 %>% dplyr::select(ResponseId) %>% unique()
+# write.csv(sample993,"~/covid-survey/sample993.csv")
+
+##### FORMAT LATEX TABLES ############
+
+{
+fake1 <- lm(best ~ 
+              mabsdeaths + 
+              mabscases +
+              feduinoneavcost + feduianyavcost + 
+              feduinoneunempl + feduianyunempl + 
+              
+              rule1 + rule2 +
+              rule3 + rule4 +
+              rule5 + rule6 +
+              rule7 + rule8 +
+              rule9 + rule10 +
+              
+              statquo +
+              
+              RPmabsdeaths +  RPmabscases + 
+              RPfeduinoneavcost +  RPfeduianyavcost +  
+              RPfeduinoneunempl +  RPfeduianyunempl +  
+              RPrule1 +  RPrule2 + 
+              RPrule3 +  RPrule4 + 
+              RPrule5 +  RPrule6 + 
+              RPrule7 +  RPrule8 + 
+              RPrule9 +  RPrule10 + 
+              RPstatquo + 0,data=dat3)
+
+fake2 <- lm(best ~ 
+              mabsdeaths + 
+              mabscases +
+              feduinoneavcost + feduianyavcost + 
+              feduinoneunempl + feduianyunempl + 
+              
+              statquo +
+              0,data=dat3)
+
+fake3 <- lm(best ~ 
+              mabsdeathsnegative + 
+              mabscasesnegative +
+              feduinoneavcost + feduianyavcost + 
+              feduinoneunempl + feduianyunempl + 
+              
+              rule1 + rule2 +
+              rule3 + rule4 +
+              rule5 + rule6 +
+              rule7 + rule8 +
+              rule9 + rule10 +
+              
+              statquo +
+              
+              RPmabsdeathsnegative +  RPmabscasesnegative + 
+              RPfeduinoneavcost +  RPfeduianyavcost +  
+              RPfeduinoneunempl +  RPfeduianyunempl +  
+              RPrule1 +  RPrule2 + 
+              RPrule3 +  RPrule4 + 
+              RPrule5 +  RPrule6 + 
+              RPrule7 +  RPrule8 + 
+              RPrule9 +  RPrule10 + 
+              RPstatquo + 0,data=dat4)
+
+fake4 <- lm(best ~ 
+              mabsdeathsnegative + 
+              mabscasesnegative +
+              feduinoneavcost + feduianyavcost + 
+              feduinoneunempl + feduianyunempl + 
+              
+              statquo +
+              0,data=dat4)
+}
+
+fixnames3 <- function (x) {
+  
+  x <- paste(x,collapse="\n")
+  
+  
+  for (i in nrow(fort):1) {
+    if(str_detect(x,paste0("",fort$variable[i]))) {
+      x <- str_replace_all(x,fort$variable[i],fort$label[i])
+    }
+  }
+  
+  x <- str_replace_all(x," numberernative","")
+  x <- str_replace_all(x," w/ any attrib.","")
+  x <- str_replace_all(x,"1=Non-zero federal UI policy","$\\\\quad \\\\times$ 1=Non-zero federal UI")
+  x <- str_remove_all(x,":Unempl rate for county")
+  x <- str_remove_all(x,"Avg. hhld cost for county:")
+  # x <- str_replace_all(x," & & \\\\\\\\"," & & \\\\\\\\[-1.2ex]")
+  # x <- str_replace_all(x,"\\[-1.8ex]","\\\\")
+  
+  x <- str_replace_all(x,"factor\\(Federal UI per week\\)", "$\\\\quad \\\\times$ Federal UI per week = \\\\$")
+  x <- str_replace_all(x,":Avg. hhld cost for county", "")
+  x <- str_replace_all(x,"Unempl rate for county:","")
+  
+  x
+  
+}
+
+summary(fake2)
+
+summary(lcmodel2)
+
+a <- summary(lcmodel)
+b <- a$CoefTable %>% as.data.frame()
+
+a2 <- summary(lcmodel2)
+b2 <- a2$CoefTable %>% as.data.frame()
+
+d <- b[which(str_detect( row.names(b), "^sd" )),]
+row.names(d) <- row.names(d) %>% str_remove_all("sd\\.")
+
+d2 <- b2[which(str_detect( row.names(b2), "^sd" )),]
+row.names(d2) <- row.names(d2) %>% str_remove_all("sd\\.") 
+
+coefs <- list(lcmodel$coefficients)
+ses <- list(setNames(b$`Std. Error`,row.names(b)))
+
+coefs[[2]] <- setNames(d$Estimate,row.names(d))
+ses[[2]] <- setNames(d$`Std. Error`,row.names(d))
+
+coefs[[3]] <- lcmodel2$coefficients
+ses[[3]] <- setNames(b2$`Std. Error`,row.names(b2))
+
+coefs[[4]] <- setNames(d2$Estimate,row.names(d2))
+ses[[4]] <- setNames(d2$`Std. Error`,row.names(d2))
+
+mixltable <- stargazer(fake1,fake2,fake3,fake4,
+                       coef=coefs,se=ses,
+                       column.labels = c("Estimate","SD","Estimate","SD"),
+                       model.numbers = F)
+mixltable %>% fixnames3() %>% str_replace_all("negative","$\\\\times -1$") %>%  cat()
+
+
+
+
+
 
 dat2 <- dat2 %>% group_by(ResponseId,choiceofperson) %>% 
   summarise(ResponseId = first(ResponseId),
