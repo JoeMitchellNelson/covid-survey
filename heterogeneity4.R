@@ -50,7 +50,7 @@ p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
   
   varlabs <- rbind(varlabs,newvarlabs)
   
-  dat$mabscases <- dat$mabscases/1000
+  dat$mabscases <- dat$mabscases
   dat$avcost <- dat$avcost/100
   
   dat$state <- ifelse(dat$CA==1,"CA",
@@ -143,6 +143,14 @@ p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
   
   names(dat) <- names(dat) %>% str_replace_all("_",".")
 
+  dat$income2 <- ifelse(dat$inccont<dat$zipmhhinc,"Poor","Rich") %>% as.factor()
+  
+  dat$wrong <- ifelse(dat$wrongsamecost == 1 | dat$wrongexactnum == 1,"Wrong","Right") %>% as.factor()
+  
+  dat <- dat %>% mutate(worstunempl = pmax(unempr20201,unempr20202,unempr20203,unempr20204,unempr20205,unempr20206,
+                                           unempr20207,unempr20208,unempr20209,unempr202010,unempr202011,unempr202012))
+  
+  dat$relunemp <- ifelse(dat$worstunempl > median(dat$worstunempl),"WorseUnemp","BetterUnemp") %>% as.factor()
   
 }
 
@@ -376,6 +384,33 @@ incometable <- maketable(fac="income",
 
 cat(incometable)
 write(incometable,file="~/covid-survey/tables/incometable_newint.tex")
+
+
+income2table <- maketable(fac="income2", 
+                         df=dat[which(dat$choiceofperson %in% 1:2),], 
+                         drop=NA) %>% 
+  fixnames()
+
+
+cat(income2table)
+write(income2table,file="~/covid-survey/tables/income2table_newint.tex")
+
+
+wrongtable <- maketable(fac="wrong", 
+                          df=dat[which(dat$choiceofperson %in% 1:2),], 
+                          drop=NA) %>% 
+  fixnames()
+
+
+cat(wrongtable)
+write(wrongtable,file="~/covid-survey/tables/wrongtable_newint.tex")
+
+unemptable <- maketable(fac="relunemp", 
+                        df=dat[which(dat$choiceofperson %in% 1:2),], 
+                        drop=NA) %>% 
+  fixnames()
+
+cat(unemptable)
 
 ####################################################
 ##################### Main results #################
@@ -1183,10 +1218,34 @@ write(hettable2,file="~/covid-survey/tables/hettable2_993_norestr_APPENDIX.tex")
 
 
 
+##################### rules SD #################################
+
+
+dat <- dat %>% group_by(choice,ResponseId,alt) %>% 
+  mutate(rulesd = sd(c(rule1 , rule2 , rule3 , rule4,  rule5 , rule6 , rule7 , rule8 , rule9 , rule10))) %>% 
+  ungroup() 
+
+dat <- dat %>% group_by(choice,ResponseId) %>% mutate(rulesd=max(rulesd)) %>% ungroup()
 
 
 
-
-
+main3b <- clogit(best ~
+                   mabsdeaths*lassorpfl + mabscases*lassorpfl +
+                   feduinoneavcost*lassorpfl + feduianyavcost*lassorpfl + 
+                   feduinoneunempl*lassorpfl + feduianyunempl*lassorpfl + 
+                   
+                  
+                   
+                   factor(rule1)*lassorpfl + factor(rule2)*lassorpfl +
+                   factor(rule3)*lassorpfl + factor(rule4)*lassorpfl +
+                   factor(rule5)*lassorpfl + factor(rule6)*lassorpfl +
+                   factor(rule7)*lassorpfl + factor(rule8)*lassorpfl +
+                   factor(rule9)*lassorpfl + factor(rule10)*lassorpfl +
+                   
+                  rulesd*statquo*lassorpfl +
+                   strata(choice),data=dat[which(dat$choiceofperson %in% 1:2),]
+                 ,weights=popwt,method="approximate"
+)
+summary(main3b)
 
 

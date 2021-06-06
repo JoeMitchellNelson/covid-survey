@@ -1,5 +1,5 @@
 ---
-title: "Unexpected effects of national social insurance on support for county-level public health policies"
+title: "<SPAN STYLE='font-size:9mm'>Unexpected effects of national social insurance on support for county-level public health policies</SPAN>"
 author: "Joe Mitchell-Nelson and Trudy Ann Cameron"
 #date: "`r format(Sys.time(), '%d %B, %Y')`"
 institute: "<br><br><font size=4>Research funding:  The University of Oregon Department of Economics, a University of Oregon COVID-19 Research Innovation Award, the continuing support of the R.F. Mikesell Foundation</font>"
@@ -16,7 +16,9 @@ output:
       highlightStyle: github
       highlightLines: true
       countIncrementalSlides: false
+      slideNumberFormat: "%current%"
   #  background-color: white
+
 ---
 
 ```{R, setup, include = F}
@@ -25,7 +27,7 @@ library(pacman)
 p_load(
   broom, here, tidyverse,xaringan,
   latex2exp, ggplot2, ggthemes, viridis, extrafont, gridExtra,
-  kableExtra,tinytex,
+  kableExtra,tinytex,stargazer,formattable,
   dplyr, magrittr, knitr, parallel, tufte,emo, ggrepel, sf, hrbrthemes, lwgeom, maps, mapdata, spData,leaflet
 )
 # Define pink color
@@ -117,6 +119,7 @@ theme_axes <- theme_void() + theme(
 ```
 
 
+
 # Introduction
 
 --
@@ -133,11 +136,11 @@ theme_axes <- theme_void() + theme(
 
 --
 
-- Pandemic policies have significant short-term effects on employment rates, increasing reliance on social safety net
+- Pandemic policies affect employment rates, increasing reliance on social safety net
 
 --
 
-- Strength of social safety net may affect support for pandemic mitigation strategies 
+- Extent of social safety net may affect support for pandemic mitigation strategies 
 
 ---
 
@@ -145,54 +148,120 @@ theme_axes <- theme_void() + theme(
 
 --
 
-**Research question**: How does national social safety net affect support for local pandemic policies?
+**Research question**: 
+
+How does national social safety net affect support for local pandemic policies?
 
 --
 
-**Method**: Choice experiment with randomized pandemic scenarios and policies
+**Method**: 
+
+Choice experiment with randomized pandemic scenarios and policies
 
 --
 
-**Significance**: Political polarization is a problem with no end in sight. The next pandemic is just around the corner.
+**Significance**: 
+
+Political polarization has no end in sight. The next pandemic may be just around the corner.
+
+---
+
+# Stated choice experiment
+  
+--
+
+- Before the consent page...
+
+  - Basic demographic screening information, including zip codes
+  - Qualtrics passively collects device type, date and time
+  - Can link location with local pandemic history
+
+--
+
+- Survey instrument
+
+  - Short update on county and national covid conditions
+  - Description of choice task
+  - Referendum-style vote on hypothetical pandemic policies
+  
+--
+
+- 993 participants from Washington, Oregon and California, collected Jan 13 - Feb 16, 2021
+  
+--
+
+- Policies described in terms of:
+
+  - Context: duration and federal safety net
+  - Reduction in cases, deaths
+  - Restrictions on 10 categories of businesses/activities
+  - Increased unemployment and resulting loss in income
+
 
 ---
 
 
-# Federal benefits
+# Stated choice experiment
+  
 
-<br>
+- Before the consent page...
+
+  - Basic demographic screening information, including zip codes
+  - Qualtrics passively collects device type, date and time
+  - Can link location with local pandemic history
+
+
+- Survey instrument
+
+  - Short update on county and national covid conditions
+  - Description of choice task
+  - Referendum-style vote on hypothetical pandemic policies
+  
+
+- 993 participants from Washington, Oregon and California, collected Jan 13 - Feb 16, 2021
+
+- Policies described in terms of:
+
+  - Context: duration and **federal safety net**
+  - Reduction in cases, deaths
+  - Restrictions on 10 categories of businesses/activities
+  - **Increased unemployment and resulting loss in income**
+
+---
+
+# US Federal benefits
+
+
 
 <center>
-<img src="figures/timeline1.png" alt="drawing" width="600" align="center"/>
+<img src="figures/timeline1.png" alt="drawing" width="800" align="center"/>
 </center>
 
 
 ---
 
-# Federal benefits
+# US Federal benefits
 
-<br>
 
 <center>
-<img src="figures/timeline2.png" alt="drawing" width="600" align="center"/>
+<img src="figures/timeline2.png" alt="drawing" width="800" align="center"/>
 </center>
 
 
 ---
 
-# Federal benefits
+# US Federal benefits
 
-<br>
 
 <center>
-<img src="figures/timeline3.png" alt="drawing" width="600" align="center"/>
+<img src="figures/timeline3.png" alt="drawing" width="800" align="center"/>
 </center>
 
 ---
 
 # The debate
 
-<br>
+
 
 <center>
 <img src="figures/headlines/hl1.png" alt="drawing" width="900" align="center"/>
@@ -202,7 +271,6 @@ theme_axes <- theme_void() + theme(
 
 # The debate
 
-<br>
 
 <center>
 <img src="figures/headlines/hl2.png" alt="drawing" width="900" align="center"/>
@@ -212,7 +280,6 @@ theme_axes <- theme_void() + theme(
 
 # The debate
 
-<br>
 
 <center>
 <img src="figures/headlines/hl3.png" alt="drawing" width="900" align="center"/>
@@ -222,7 +289,6 @@ theme_axes <- theme_void() + theme(
 
 # The debate
 
-<br>
 
 <center>
 <img src="figures/headlines/hl4.png" alt="drawing" width="900" align="center"/>
@@ -232,7 +298,6 @@ theme_axes <- theme_void() + theme(
 
 # The debate
 
-<br>
 
 <center>
 <img src="figures/headlines/hl5.png" alt="drawing" width="900" align="center"/>
@@ -242,7 +307,6 @@ theme_axes <- theme_void() + theme(
 
 # The debate
 
-<br>
 
 <center>
 <img src="figures/headlines/hl6.png" alt="drawing" width="900" align="center"/>
@@ -252,7 +316,6 @@ theme_axes <- theme_void() + theme(
 
 # The debate
 
-<br>
 
 <center>
 <img src="figures/headlines/hl7.png" alt="drawing" width="900" align="center"/>
@@ -262,7 +325,6 @@ theme_axes <- theme_void() + theme(
 
 # The debate
 
-<br>
 
 <center>
 <img src="figures/headlines/hl8.png" alt="drawing" width="900" align="center"/>
@@ -272,59 +334,314 @@ theme_axes <- theme_void() + theme(
 
 ---
 
-# The "debate"
+# The other debate
 
 <br>
 
 <center>
-<img src="figures/anti-mask2.jpg" alt="drawing" width="600" align="center"/>
+<img src="figures/anti-mask3.jpg" alt="drawing" width="600" align="center"/>
 </center>
+
 
 ---
 
-# The debate
+# The other debate
+
+<br>
 
 <center>
-<img src="figures/pro-mask1.jpg" alt="drawing" width="400" align="center"/>
+<img src="figures/anti-mask5.jpg" alt="drawing" width="600" align="center"/>
+</center>
+
+--
+
+Are these preferences related?
+
+---
+
+
+
+# Instructions to respondents
+
+--
+
+Respondents did not get to vote on Federal UI payments:
+
+> **Assume that any Federal unemployment benefits, as described, will be in place regardless of any pandemic rules that apply in [respondent's] County.**
+
+--
+
+We emphasized that costs/unemployment would be uncertain, unequal, and related:
+
+> These “Average $/month lost” because of a policy are mostly a RESULT of unemployment and lost business
+earnings. They are not an extra cost on top of that.
+
+> Before a policy is adopted, we don't know exactly who will bear costs that are higher or lower than the
+average. **Your own household's actual cost per month will be uncertain.**
+
+
+---
+
+# Choice task: preamble
+
+<center>
+<img src="figures/summary1.png" alt="drawing" width="600" align="center"/>
 </center>
 
 ---
 
-# Stated choice experiment
-  
+# Choice task: attributes
+
+<center>
+<img src="figures/summary2a.png" alt="drawing" width="600" align="center"/>
+</center>
+
+---
+
+# Choice task: attributes
+
+<center>
+<img src="figures/summary2.png" alt="drawing" width="600" align="center"/>
+</center>
+
+---
+
+# Choice task: modals
+
+<center>
+<img src="figures/summary3.png" alt="drawing" width="600" align="center"/>
+</center>
+
+---
+
+# Choice task: vote
+
+<br>
+
+<center>
+<img src="figures/summary6.png" alt="drawing" width="300" align="center"/>
+</center>
+
+---
+
+# Selection correction
+
 --
 
-- Survey instrument
+Variables retained: LASSO selection equation
 
---
+<center>
+<img src="figures/Selection variables_fafafa.png" alt="drawing" width="750" align="center"/>
+</center>
 
-  - Short update on county and national covid conditions
-  
---
+---
 
-  - Description of choice task
+# Selected results
 
---
+```{r echo=FALSE}
 
-  - Referendum-style vote on hypothetical pandemic policies
-  
---
+res0 <- read.csv("~/covid-survey/presentations/results-table.csv")
+res0[,4:5] <- ""
+res0[2:13,2:3] <- ""
 
-- Policies described in terms of:
 
-  - Duration
+names(res0) <- c("","(1)","(2)","(1')","(2')")
 
-  - Reduction in cases
-  
-  - Reduction in deaths
-  
-  - Restrictions on 10 categories of businesses/activities
-  
-  - Increased unemployment and resulting loss in income
 
---
 
-- 993 participants from Washington, Oregon and California, collected Jan 13 - Feb 16
+kbl(res0,align=c("l","c","c","c","c")) %>%
+  kable_classic(
+    bootstrap_options = c("condensed"),html_font="\"Arial\""
+    ) %>%
+  row_spec(0:13,
+           font_size = 14,bold=T) %>%
+  column_spec(1,width="1.5in") %>%
+  column_spec(2:5,width="1in") %>%
+  row_spec(6, extra_css = "border-bottom: 1px solid") %>%
+  row_spec(12, extra_css = "border-bottom: 1px solid")
+
+```
+
+Model (1) treats business restrictions as continuous. Model (2) uses indicator variables for business restrictions. All models include cases, deaths, and de-meaned response propensity interactions. (N = 1,986 pairwise choices)
+
+---
+
+# Selected results
+
+```{r echo=FALSE}
+
+res1 <- read.csv("~/covid-survey/presentations/results-table.csv")
+res1[,4:5] <- ""
+res1[7:13,2:5] <- ""
+
+names(res1) <- c("","(1)","(2)","(1')","(2')")
+
+
+
+kbl(res1,align=c("l","c","c","c","c")) %>%
+  kable_classic(
+    bootstrap_options = c("condensed"),html_font="\"Arial\""
+    ) %>%
+  row_spec(0:13,
+           font_size = 14,bold=T) %>%
+  column_spec(1,width="1.5in") %>%
+  column_spec(2:5,width="1in") %>%
+  row_spec(6, extra_css = "border-bottom: 1px solid") %>%
+  row_spec(12, extra_css = "border-bottom: 1px solid") %>% 
+  row_spec(5,color="red")
+
+```
+
+Model (1) treats business restrictions as continuous. Model (2) uses indicator variables for business restrictions. All models include cases, deaths, and de-meaned response propensity interactions. (N = 1,986 pairwise choices)
+
+---
+
+# Selected results
+
+```{r echo=FALSE}
+
+res1b <- read.csv("~/covid-survey/presentations/results-table.csv")
+res1b[,4:5] <- ""
+
+names(res1b) <- c("","(1)","(2)","(1')","(2')")
+
+
+
+kbl(res1b,align=c("l","c","c","c","c")) %>%
+  kable_classic(
+    bootstrap_options = c("condensed"),html_font="\"Arial\""
+    ) %>%
+  row_spec(0:13,
+           font_size = 14,bold=T) %>%
+  column_spec(1,width="1.5in") %>%
+  column_spec(2:5,width="1in") %>%
+  row_spec(6, extra_css = "border-bottom: 1px solid") %>%
+  row_spec(12, extra_css = "border-bottom: 1px solid") %>% 
+  row_spec(5,color="red") %>% 
+  row_spec(11,color="red")
+
+```
+
+Model (1) treats business restrictions as continuous. Model (2) uses indicator variables for business restrictions. All models include cases, deaths, and de-meaned response propensity interactions. (N = 1,986)
+
+---
+
+# Selected results
+
+```{r echo=FALSE}
+
+
+
+res2 <- read.csv("~/covid-survey/presentations/results-table.csv")
+
+names(res2) <- c("","(1)","(2)","(1')","(2')")
+
+kbl(res2,align=c("l","c","c","c","c")) %>%
+  kable_classic(
+    bootstrap_options = c("condensed"),html_font="\"Arial\""
+    ) %>%
+  row_spec(0:13,
+           font_size = 14,bold=T) %>%
+  column_spec(1,width="1.5in") %>%
+  column_spec(2:5,width="1in") %>%
+  row_spec(6, extra_css = "border-bottom: 1px solid") %>%
+  row_spec(12, extra_css = "border-bottom: 1px solid") %>% 
+  row_spec(5,color="red") %>% 
+  row_spec(11,color="red")
+
+```
+
+Models (1) and (1') treat business restrictions as continuous. Models (2) and (2') use indicator variables for business restrictions. All models include cases, deaths, and de-meaned response propensity interactions. (N = 1,986)
+
+---
+
+# Heterogeneity
+
+```{r echo=FALSE}
+
+het1 <- read.csv("~/covid-survey/presentations/results-table-het.csv")
+
+names(het1)[c(1,5,7,8)] <- c("","Non-white","<$75k/yr",">$75k/yr")
+
+het1[,5:8] <- ""
+
+kbl(het1,align=c("l","c","c","c","c","c","c","c")) %>%
+  kable_classic(
+    bootstrap_options = c("condensed"),html_font="\"Arial\""
+    ) %>%
+  row_spec(0:6,
+           font_size = 14,bold=T)  %>%
+  column_spec(1,width="2in",border_right=T) %>%
+  column_spec(2:8,width="1in") %>%
+  row_spec(5, extra_css = "border-bottom: 1px solid")
+```
+
+---
+
+# Heterogeneity
+
+```{r echo=FALSE}
+
+het2 <- read.csv("~/covid-survey/presentations/results-table-het.csv")
+
+names(het2)[c(1,5,7,8)] <- c("","Non-white","<$75k/yr",">$75k/yr")
+
+het2[,7:8] <- ""
+
+kbl(het2,align=c("l","c","c","c","c","c","c","c")) %>%
+  kable_classic(
+    bootstrap_options = c("condensed"),html_font="\"Arial\""
+    ) %>%
+  row_spec(0:6,
+           font_size = 14,bold=T)  %>%
+  column_spec(1,width="2in",border_right=T) %>%
+  column_spec(2:8,width="1in") %>% 
+  column_spec(4,border_right=T) %>%
+  row_spec(5, extra_css = "border-bottom: 1px solid")
+```
+
+---
+
+# Heterogeneity
+
+```{r echo=FALSE}
+
+het3 <- read.csv("~/covid-survey/presentations/results-table-het.csv")
+
+names(het3)[c(1,5,7,8)] <- c("","Non-white","<$75k/yr",">$75k/yr")
+
+kbl(het3,align=c("l","c","c","c","c","c","c","c")) %>%
+  kable_classic(
+    bootstrap_options = c("condensed"),html_font="\"Arial\""
+    ) %>%
+  row_spec(0:6,
+           font_size = 14,bold=T)  %>% 
+  column_spec(1,width="2in",border_right=T) %>%
+  column_spec(2:8,width="1in") %>% 
+  column_spec(c(4,6),border_right=T) %>%
+  row_spec(5, extra_css = "border-bottom: 1px solid")
+```
+
+---
+
+# Conclusion
+
+- National policy context shapes local policy preferences
+
+- Model has much better fit with Federal UI interactions
+
+- Some folks care about the cost consequences; liberals want a policy regardless of the economic effects
+
+Methodological stuff:
+
+- Designed survey questions for population of 50,000 and dynamically adjusted figures for respondent's county
+
+- Pop-ups to reduce cognitive burden
+
+- Ad hoc (non-FIML) selection procedure for conditional logit
+  - Simulates preference parameters for participant with mean response propensity from an invitee population that was represenative on observables
+
+
 
 ---
 

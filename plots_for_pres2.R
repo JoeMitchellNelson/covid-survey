@@ -60,7 +60,7 @@ tl2 <- ggplot(bene) +
 
 tl1 / tl2 +plot_layout(heights=c(3,1.7))
 
-ggsave("~/covid-survey/presentations/figures/timeline1.png",last_plot(),width=11*.85,height=8*.85,units="in")
+ggsave("~/covid-survey/presentations/figures/timeline1.png",last_plot(),width=11*.7,height=8*.7,units="in")
 
 tl3 <- ggplot(bene) +
   geom_line(aes(x=Date,y=Benefit)) +
@@ -101,7 +101,7 @@ tl4 <- ggplot(bene) +
 
 tl3 / tl4 +plot_layout(heights=c(3,1.7))
 
-ggsave("~/covid-survey/presentations/figures/timeline2.png",last_plot(),width=11*.85,height=8*.85,units="in")
+ggsave("~/covid-survey/presentations/figures/timeline2.png",last_plot(),width=11*.7,height=8*.7,units="in")
 
 
 tl5 <- ggplot(bene) +
@@ -143,5 +143,5 @@ tl6 <- ggplot(bene) +
 
 tl5 / tl6 +plot_layout(heights=c(3,1.7))
 
-ggsave("~/covid-survey/presentations/figures/timeline3.png",last_plot(),width=11*.85,height=8*.85,units="in")
+ggsave("~/covid-survey/presentations/figures/timeline3.png",last_plot(),width=11*.7,height=8*.7,units="in")
 
