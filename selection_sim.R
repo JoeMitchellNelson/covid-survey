@@ -1,32 +1,35 @@
 require(pacman)
-p_load(MASS,evd)
+p_load(MASS,evd,tidyverse,survival)
+
+
+set.seed(301541)
 
 # number of "survey invitations" within each iteration
-n = 1000
-
+n = 5000
+m = 5000
 # 2 utility functions
 u1 <- function (type,a,c,e1,statquo) {
   ifelse(type=="I",
-         2*a - 1*c + e1 + statquo, # utility function for type I agents
-         1*a - 1*c + e1 + statquo) # utility function for type II agents
+         1*a - 1*c + e1 + 0*statquo, # utility function for type I agents
+         1*a - 2.5*c + e1 + 0*statquo) # utility function for type II agents
 }
 
 
 
 
 # initialize df for results of simulation
-dat <- data.frame(everyone=rep(NA,1000),respondersonly=NA,fixed=NA)
+dat <- data.frame(everyone=rep(NA,m),respondersonly=NA,fixed=NA)
 
 
-for (i in 1:1000) {
+for (i in 1:m) {
   
-  sim <- data.frame(type = rep(c("I","II"),each=2),  # agents are one of two types, with different utilty functions
+  sim <- data.frame(type = rep(c("I","II"),each=2),  # agents are one of two types, with different utility functions
                     choiceid=rep(1:n,each=2),        # choice index
                     altid=1:(2*n),                   # alternative index
                     a=rnorm(2*n,5,1),                # a is level of some desirable alternative
                     c=rnorm(2*n,5,1),                # c is cost
-                    e1=rgumbel(2*n,0,1),             # e1 is type 1 extreme value error for logit estimation
-                    e2=rep(rnorm(n,0,1),each=2),     # e2 is normal error for rp estimation
+                    e1=rgumbel(2*n,-0.57721,1),             # e1 is type 1 extreme value error for logit estimation
+                    e2=rep(rlogis(n,0,sqrt(3)/pi),each=2),     # e2 is logistic error for rp estimation
                     z=rep(rnorm(n,0,1),each=2))      # z is an observable variable correlated with rp (and maybe also type)
   
   # force one option in each pair to be "status quo"
@@ -48,17 +51,12 @@ for (i in 1:1000) {
   # probability of response
   sim$rp <- pnorm(sim$z + sim$e2)
   
-  
-  # binomial draw to determine if each person actually responds to survey
-  sim$respond <- NA
-  for (j in 1:nrow(sim)) {
-    sim$respond[j] <- rbinom(1,1,sim$rp[j])
-  }
+  sim$respond <- rbinom(nrow(sim),1,sim$rp)
   
   sim <- sim %>% group_by(choiceid) %>% mutate(respond=first(respond)) %>% ungroup()
   
   # estimate WTP for attribute "a" if we could observe everyone (benchmark case)
-  res <- clogit(best ~ a + c  + statquo + strata(choiceid),data=sim)
+  res <- clogit(best ~ a + c  + statquo + strata(choiceid),data=sim[which(sim$choiceid %in% sample(max(sim$choiceid),sum(sim$respond)/2)),])
   t1 <- -1*res$coefficients[["a"]]/res$coefficients[["c"]]
   
   # estimate WTP using only responders (should be higher than true on average)
@@ -71,30 +69,34 @@ for (i in 1:1000) {
   sim2$fitted <- predict(fix)
   sim2$fitted <- sim2$fitted - mean(sim2$fitted)
   
-  sim <- left_join(sim,sim2)
+  sim <- left_join(sim,sim2,by = c("choiceid", "z", "respond"))
   
   # selection corrected WTP
-  res3 <- clogit(best ~ a + c + statquo + a:fitted + c:fitted + statquo:fitted + strata(choiceid),data=sim[which(sim$respond==1),])
+  res3 <- clogit(best ~ a*fitted + c*fitted + statquo*fitted + strata(choiceid),data=sim[which(sim$respond==1),])
   t3 <- -1*res3$coefficients[["a"]]/res3$coefficients[["c"]]
+
+ # clogit(best ~ a + c + statquo + strata(choiceid), data=sim[which(sim$type=="I"),])
   
   # store results in a dataframe 
   dat$everyone[i] <- t1
   dat$respondersonly[i] <- t2
   dat$fixed[i] <- t3
+
   
 }
 
+mean(dat$everyone,na.rm=T)
+mean(dat$respondersonly,na.rm=T)
+mean(dat$fixed,na.rm=T)
 
 ggplot(dat) + 
   geom_density(aes(x=everyone),fill="green",alpha=.5) + 
   geom_density(aes(x=respondersonly),fill="blue",alpha=0.5) +
-  geom_density(aes(x=fixed),fill="red",alpha=0.5)
+  geom_density(aes(x=fixed),fill="red",alpha=0.5) +
+  geom_vline(xintercept = mean(dat$everyone),color="green") +
+  geom_vline(xintercept = mean(dat$respondersonly),color="blue") +
+  geom_vline(xintercept = mean(dat$fixed),color="red") 
 
-
-ggplot(dat) + 
-  geom_density(aes(x=everyone),fill="green",alpha=.5) + 
-  geom_density(aes(x=respondersonly),fill="blue",alpha=0.5) +
-  geom_density(aes(x=fixed),fill="red",alpha=0.5)
 
 dat <- dat %>% mutate(uncorrected = respondersonly - everyone)
 dat <- dat %>% mutate(corrected = fixed - everyone)
@@ -106,7 +108,11 @@ ggplot(dat) +
   geom_vline(xintercept=0,linetype="dashed",color="grey50",alpha=0.5)
 
 
-summary(dat$corrected)
-summary(dat$uncorrected)
-sd(dat$corrected)/sqrt(500)
-sd(dat$uncorrected)/sqrt(500)
+
+mean(dat$corrected,na.rm=T)
+mean(dat$uncorrected,na.rm=T)
+sd(dat$corrected,na.rm=T)/sqrt(m)
+sd(dat$uncorrected,na.rm=T)/sqrt(m)
+1 - abs(mean(dat$corrected,na.rm=T)/mean(dat$uncorrected,na.rm=T))
+
+sum(abs(dat$corrected)<abs(dat$uncorrected),na.rm=T)/m
