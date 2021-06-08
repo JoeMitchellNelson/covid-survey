@@ -9,9 +9,9 @@ p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
 #################### READ IN DATA ################
 {
   
-  newdemean <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID-shared/intermediate-files/demeanrp-lasso.csv")[,-1]
-  cmatch <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID-shared/intermediate-files/countymatch.csv")[,-1]
-  dat <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.csv") %>% 
+  newdemean <- read.csv("C:/Users/joe/Dropbox (University of Oregon)/VSL-COVID-shared/intermediate-files/demeanrp-lasso.csv")[,-1]
+  cmatch <- read.csv("C:/Users/joe/Dropbox (University of Oregon)/VSL-COVID-shared/intermediate-files/countymatch.csv")[,-1]
+  dat <- read.csv("C:/Users/joe/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.csv") %>% 
     # dplyr::filter(rejectonly==0) %>% 
     dplyr::filter(Durationinseconds > 360) %>% 
     dplyr::filter(choiceofperson %in% 1:2) %>% 
@@ -24,7 +24,7 @@ p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
   dat$owninc <- ifelse(dat$owninc==0,NA,dat$owninc)
   
   
-  dat2 <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.dta")
+  dat2 <- read.dta13("C:/Users/joe/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.dta")
   
   ethnic <- read.csv("~/covid-survey/data/countyethfrac.csv")[,-1]
   
@@ -203,8 +203,9 @@ incplot <- dat %>% group_by(inccont) %>% summarise(loss=mean(incloss,na.rm=T))
 
 reg1 <- clogit(best ~
                  mabsdeaths*lassorpfl + mabscases*lassorpfl +
-                 feduinoneavcost*lassorpfl + feduianyavcost*lassorpfl + 
-                 feduinoneunempl*lassorpfl + feduianyunempl*lassorpfl +
+                 avcost*lassorpfl + unempl*lassorpfl + 
+                 avcost*feduiany*lassorpfl + unempl*feduiany*lassorpfl +
+                 
                  
                  factor(rule1)*lassorpfl + factor(rule2)*lassorpfl +
                  factor(rule3)*lassorpfl + factor(rule4)*lassorpfl +
@@ -232,8 +233,8 @@ summary(reg2)
 
 main3 <- clogit(best ~
                   mabsdeaths*lassorpfl + mabscases*lassorpfl +
-                  feduinoneavcost*lassorpfl + feduianyavcost*lassorpfl + 
-                  feduinoneunempl*lassorpfl + feduianyunempl*lassorpfl + 
+                  avcost*lassorpfl + unempl*lassorpfl + 
+                  avcost*feduiany*lassorpfl + unempl*feduiany*lassorpfl +
                   
                   rule1*lassorpfl + rule2*lassorpfl +
                   rule3*lassorpfl + rule4*lassorpfl +
