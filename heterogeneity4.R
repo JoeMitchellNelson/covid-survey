@@ -9,9 +9,9 @@ p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
 #################### READ IN DATA ################
 {
   
-  newdemean <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID-shared/intermediate-files/demeanrp-lasso.csv")[,-1]
-  cmatch <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID-shared/intermediate-files/countymatch.csv")[,-1]
-  dat <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.csv") %>% 
+  newdemean <- read.csv("C:/Users/joe/Dropbox (University of Oregon)/VSL-COVID-shared/intermediate-files/demeanrp-lasso.csv")[,-1]
+  cmatch <- read.csv("C:/Users/joe/Dropbox (University of Oregon)/VSL-COVID-shared/intermediate-files/countymatch.csv")[,-1]
+  dat <- read.csv("C:/Users/joe/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.csv") %>% 
     # dplyr::filter(rejectonly==0) %>% 
     dplyr::filter(Durationinseconds > 360) %>% 
     dplyr::filter(choiceofperson %in% 1:2) %>% 
@@ -24,7 +24,7 @@ p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
   dat$owninc <- ifelse(dat$owninc==0,NA,dat$owninc)
   
   
-  dat2 <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.dta")
+  dat2 <- read.dta13("C:/Users/joe/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.dta")
   
   ethnic <- read.csv("~/covid-survey/data/countyethfrac.csv")[,-1]
   
@@ -1249,3 +1249,101 @@ main3b <- clogit(best ~
 summary(main3b)
 
 
+
+###################### Cluster by person ########################
+
+main3cluster <- clogit(best ~
+                  mabsdeaths*lassorpfl + mabscases*lassorpfl +
+                  feduinoneavcost*lassorpfl + feduianyavcost*lassorpfl + 
+                  feduinoneunempl*lassorpfl + feduianyunempl*lassorpfl + 
+                  
+                  rule1*lassorpfl + rule2*lassorpfl +
+                  rule3*lassorpfl + rule4*lassorpfl +
+                  rule5*lassorpfl + rule6*lassorpfl +
+                  rule7*lassorpfl + rule8*lassorpfl +
+                  rule9*lassorpfl + rule10*lassorpfl +
+                  
+                  statquo*lassorpfl +
+                  strata(choice),data=dat[which(dat$choiceofperson %in% 1:2),]
+                ,weights=popwt,method="approximate",
+                cluster=ResponseId
+)
+
+
+main6cluster <- clogit(best ~
+                   mabsdeaths*lassorpfl + mabscases*lassorpfl +
+                   feduinoneavcost*lassorpfl + feduianyavcost*lassorpfl + 
+                   feduinoneunempl*lassorpfl + feduianyunempl*lassorpfl + 
+                   
+                   factor(rule1)*lassorpfl + factor(rule2)*lassorpfl +
+                   factor(rule3)*lassorpfl + factor(rule4)*lassorpfl +
+                   factor(rule5)*lassorpfl + factor(rule6)*lassorpfl +
+                   factor(rule7)*lassorpfl + factor(rule8)*lassorpfl +
+                   factor(rule9)*lassorpfl + factor(rule10)*lassorpfl +
+                   
+                   statquo*lassorpfl +
+                   strata(choice),data=dat[which(dat$choiceofperson %in% 1:2),]
+                 ,weights=popwt,method="approximate",
+                 cluster=ResponseId
+)
+
+varskeep <- c("^mabsdeaths$","^mabscases$","^feduinoneavcost$","^feduianyavcost$","^feduinoneunempl$","^feduianyunempl$","^statquo$")
+
+t3 <- broom::tidy(main3cluster)
+t6 <- broom::tidy(main6cluster)
+
+model.se <- list(t3$robust.se,t6$robust.se)
+
+a <- stargazer(main3cluster,main6cluster,
+          keep=varskeep,
+          se=model.se)
+a %>% fixnames2 %>% cat()
+
+##### base + shifters ####
+
+main3cluster2 <- clogit(best ~
+                         mabsdeaths*lassorpfl + mabscases*lassorpfl +
+                          avcost*lassorpfl + avcost:feduiany*lassorpfl + 
+                          unempl*lassorpfl + unempl:feduiany*lassorpfl + 
+                         
+                         rule1*lassorpfl + rule2*lassorpfl +
+                         rule3*lassorpfl + rule4*lassorpfl +
+                         rule5*lassorpfl + rule6*lassorpfl +
+                         rule7*lassorpfl + rule8*lassorpfl +
+                         rule9*lassorpfl + rule10*lassorpfl +
+                         
+                         statquo*lassorpfl +
+                         strata(choice),data=dat[which(dat$choiceofperson %in% 1:2),]
+                       ,weights=popwt,method="approximate",
+                       cluster=ResponseId
+)
+
+
+main6cluster2 <- clogit(best ~
+                         mabsdeaths*lassorpfl + mabscases*lassorpfl +
+                          avcost*lassorpfl + avcost:feduiany*lassorpfl + 
+                          unempl*lassorpfl + unempl:feduiany*lassorpfl + 
+                         
+                         factor(rule1)*lassorpfl + factor(rule2)*lassorpfl +
+                         factor(rule3)*lassorpfl + factor(rule4)*lassorpfl +
+                         factor(rule5)*lassorpfl + factor(rule6)*lassorpfl +
+                         factor(rule7)*lassorpfl + factor(rule8)*lassorpfl +
+                         factor(rule9)*lassorpfl + factor(rule10)*lassorpfl +
+                         
+                         statquo*lassorpfl +
+                         strata(choice),data=dat[which(dat$choiceofperson %in% 1:2),]
+                       ,weights=popwt,method="approximate",
+                       cluster=ResponseId
+)
+
+varskeep2 <- c("^mabsdeaths$","^mabscases$","^avcost$","^avcost:feduiany$","^unempl$","^unempl:feduiany$","^statquo$")
+
+t3b <- broom::tidy(main3cluster2)
+t6b <- broom::tidy(main6cluster2)
+
+model.se2 <- list(t3b$robust.se,t6b$robust.se)
+
+a <- stargazer(main3cluster2,main6cluster2,
+               keep=varskeep2,
+               se=model.se2)
+a %>% fixnames2 %>% cat()
