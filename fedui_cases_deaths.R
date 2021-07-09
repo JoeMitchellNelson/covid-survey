@@ -92,6 +92,8 @@ p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
   
   dat <- left_join(dat,ethnic)
   
+  #### cost and unemp ######
+  
   dat$feduianyavcost <- dat$feduiany*dat$avcost
   dat$feduinoneavcost <- dat$feduinone*dat$avcost
   
@@ -108,6 +110,35 @@ p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
   dat$fedui200unempl <- dat$fedui200*dat$unempl
   dat$fedui300unempl <- dat$fedui300*dat$unempl
   dat$fedui400unempl <- dat$fedui400*dat$unempl
+  
+  ### cases and deaths ####
+  
+  dat$feduianymabscases <- dat$feduiany*dat$mabscases
+  dat$feduinonemabscases <- dat$feduinone*dat$mabscases
+  
+  dat$feduianymabsdeaths <- dat$feduiany*dat$mabsdeaths
+  dat$feduinonemabsdeaths <- dat$feduinone*dat$mabsdeaths
+  
+  
+  dat$fedui100mabscases <- dat$fedui100*dat$mabscases
+  dat$fedui200mabscases <- dat$fedui200*dat$mabscases
+  dat$fedui300mabscases <- dat$fedui300*dat$mabscases
+  dat$fedui400mabscases <- dat$fedui400*dat$mabscases
+  
+  dat$fedui100mabsdeaths <- dat$fedui100*dat$mabsdeaths
+  dat$fedui200mabsdeaths <- dat$fedui200*dat$mabsdeaths
+  dat$fedui300mabsdeaths <- dat$fedui300*dat$mabsdeaths
+  dat$fedui400mabsdeaths <- dat$fedui400*dat$mabsdeaths
+  
+  ### statquo ###
+  
+  dat$feduianystatquo <- dat$feduiany*dat$statquo
+  dat$feduinonestatquo <- dat$feduinone*dat$statquo
+  
+  dat$fedui100statquo <- dat$fedui100*dat$statquo
+  dat$fedui200statquo <- dat$fedui200*dat$statquo
+  dat$fedui300statquo <- dat$fedui300*dat$statquo
+  dat$fedui400statquo <- dat$fedui400*dat$statquo
   
   dat$ideol2 <- dat$ideol2 %>% factor(levels=c("liberal","moderate","conservative","MISSING"))
   
@@ -142,7 +173,7 @@ p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
                     remove_first_dummy = T)
   
   names(dat) <- names(dat) %>% str_replace_all("_",".")
-
+  
   dat$income2 <- ifelse(dat$inccont<dat$zipmhhinc,"Poor","Rich") %>% as.factor()
   
   dat$wrong <- ifelse(dat$wrongsamecost == 1 | dat$wrongexactnum == 1,"Wrong","Right") %>% as.factor()
@@ -210,7 +241,7 @@ getsummary <- function (fac,df) {
   form2 <- paste(form1,collapse=" + ")
   
   
-
+  
   form3 <- paste0("best ~",form2,"+ strata(choice)") %>% as.formula
   
   summary(clogit(form3,data=newdf,weights=popwt,method="approximate"))
@@ -271,7 +302,7 @@ maketable <- function (fac,df,drop=c("MISSING")) {
   
   
   fake <- lm(best ~ mabsdeaths + mabscases + feduianyavcost + feduinoneavcost + feduianyunempl + feduinoneunempl +
-                statquo + 0,data = df)
+               statquo + 0,data = df)
   
   vars.order <- c("mabsdeaths",  "mabscases", "feduinoneavcost",  "feduianyavcost",  
                   "feduinoneunempl",  "feduianyunempl",  
@@ -387,8 +418,8 @@ write(incometable,file="~/covid-survey/tables/incometable_newint.tex")
 
 
 income2table <- maketable(fac="income2", 
-                         df=dat[which(dat$choiceofperson %in% 1:2),], 
-                         drop=NA) %>% 
+                          df=dat[which(dat$choiceofperson %in% 1:2),], 
+                          drop=NA) %>% 
   fixnames()
 
 
@@ -397,8 +428,8 @@ write(income2table,file="~/covid-survey/tables/income2table_newint.tex")
 
 
 wrongtable <- maketable(fac="wrong", 
-                          df=dat[which(dat$choiceofperson %in% 1:2),], 
-                          drop=NA) %>% 
+                        df=dat[which(dat$choiceofperson %in% 1:2),], 
+                        drop=NA) %>% 
   fixnames()
 
 
@@ -406,7 +437,7 @@ cat(wrongtable)
 write(wrongtable,file="~/covid-survey/tables/wrongtable_newint.tex")
 
 a <- getsummary(fac="income2", 
-           df=dat[which(dat$choiceofperson %in% 1:2),])
+                df=dat[which(dat$choiceofperson %in% 1:2),])
 
 a <- a$coefficients
 
@@ -470,7 +501,9 @@ fixnames2 <- function (x) {
   )
   
   main3 <- clogit(best ~
-                    mabsdeaths*lassorpfl + mabscases*lassorpfl +
+                    feduinonemabscases*lassorpfl + feduianymabscases*lassorpfl +
+                    feduinonemabsdeaths*lassorpfl + feduianymabsdeaths*lassorpfl +
+                    
                     feduinoneavcost*lassorpfl + feduianyavcost*lassorpfl + 
                     feduinoneunempl*lassorpfl + feduianyunempl*lassorpfl + 
                     
@@ -480,13 +513,15 @@ fixnames2 <- function (x) {
                     rule7*lassorpfl + rule8*lassorpfl +
                     rule9*lassorpfl + rule10*lassorpfl +
                     
-                    statquo*lassorpfl +
+                    feduinonestatquo*lassorpfl +
+                    feduianystatquo*lassorpfl +
                     strata(choice),data=dat[which(dat$choiceofperson %in% 1:2),]
                   ,weights=popwt,method="approximate"
   )
   
   main2 <- clogit(best ~
-                    mabsdeaths*lassorpfl + mabscases*lassorpfl +
+                    feduinonemabscases*lassorpfl + fedui100mabscases*lassorpfl + fedui200mabscases*lassorpfl + fedui300mabscases*lassorpfl + fedui400mabscases*lassorpfl +
+                    feduinonemabsdeaths*lassorpfl + fedui100mabsdeaths*lassorpfl + fedui200mabsdeaths*lassorpfl + fedui300mabsdeaths*lassorpfl + fedui400mabsdeaths*lassorpfl +
                     feduinoneavcost*lassorpfl + fedui100avcost*lassorpfl + fedui200avcost*lassorpfl + fedui300avcost*lassorpfl + fedui400avcost*lassorpfl +
                     feduinoneunempl*lassorpfl + fedui100unempl*lassorpfl + fedui200unempl*lassorpfl + fedui300unempl*lassorpfl + fedui400unempl*lassorpfl +
                     
@@ -496,56 +531,60 @@ fixnames2 <- function (x) {
                     rule7*lassorpfl + rule8*lassorpfl +
                     rule9*lassorpfl + rule10*lassorpfl +
                     
-                    statquo*lassorpfl +
+                    feduinonestatquo*lassorpfl + fedui100statquo*lassorpfl + fedui200statquo*lassorpfl + fedui300statquo*lassorpfl + fedui400statquo*lassorpfl +
                     strata(choice),data=dat[which(dat$choiceofperson %in% 1:2),]
                   ,weights=popwt,method="approximate"
   )
   
   main1b <- clogit(best ~
-                    mabsdeaths*lassorpfl + mabscases*lassorpfl +
-                    unempl*lassorpfl + avcost*lassorpfl +
+                     mabsdeaths*lassorpfl + mabscases*lassorpfl +
+                     unempl*lassorpfl + avcost*lassorpfl +
                      
                      factor(rule1)*lassorpfl + factor(rule2)*lassorpfl +
                      factor(rule3)*lassorpfl + factor(rule4)*lassorpfl +
                      factor(rule5)*lassorpfl + factor(rule6)*lassorpfl +
                      factor(rule7)*lassorpfl + factor(rule8)*lassorpfl +
                      factor(rule9)*lassorpfl + factor(rule10)*lassorpfl +
-                    
-                    statquo*lassorpfl +
-                    strata(choice),data=dat[which(dat$choiceofperson %in% 1:2),]
-                  ,weights=popwt,method="approximate"
+                     
+                     statquo*lassorpfl +
+                     strata(choice),data=dat[which(dat$choiceofperson %in% 1:2),]
+                   ,weights=popwt,method="approximate"
   )
   
   main3b <- clogit(best ~
-                    mabsdeaths*lassorpfl + mabscases*lassorpfl +
-                    feduinoneavcost*lassorpfl + feduianyavcost*lassorpfl + 
-                    feduinoneunempl*lassorpfl + feduianyunempl*lassorpfl + 
-                    
+                     feduinonemabscases*lassorpfl + feduianymabscases*lassorpfl +
+                     feduinonemabsdeaths*lassorpfl + feduianymabsdeaths*lassorpfl +
+                     feduinoneavcost*lassorpfl + feduianyavcost*lassorpfl + 
+                     feduinoneunempl*lassorpfl + feduianyunempl*lassorpfl + 
+                     
                      factor(rule1)*lassorpfl + factor(rule2)*lassorpfl +
                      factor(rule3)*lassorpfl + factor(rule4)*lassorpfl +
                      factor(rule5)*lassorpfl + factor(rule6)*lassorpfl +
                      factor(rule7)*lassorpfl + factor(rule8)*lassorpfl +
                      factor(rule9)*lassorpfl + factor(rule10)*lassorpfl +
-                    
-                    statquo*lassorpfl +
-                    strata(choice),data=dat[which(dat$choiceofperson %in% 1:2),]
-                  ,weights=popwt,method="approximate"
+                     
+                     feduinonestatquo*lassorpfl +
+                     feduianystatquo*lassorpfl +
+                     strata(choice),data=dat[which(dat$choiceofperson %in% 1:2),]
+                   ,weights=popwt,method="approximate"
   )
   
   main2b <- clogit(best ~
-                    mabsdeaths*lassorpfl + mabscases*lassorpfl +
-                    feduinoneavcost*lassorpfl + fedui100avcost*lassorpfl + fedui200avcost*lassorpfl + fedui300avcost*lassorpfl + fedui400avcost*lassorpfl +
-                    feduinoneunempl*lassorpfl + fedui100unempl*lassorpfl + fedui200unempl*lassorpfl + fedui300unempl*lassorpfl + fedui400unempl*lassorpfl +
-                    
+                     feduinonemabscases*lassorpfl + fedui100mabscases*lassorpfl + fedui200mabscases*lassorpfl + fedui300mabscases*lassorpfl + fedui400mabscases*lassorpfl +
+                     feduinonemabsdeaths*lassorpfl + fedui100mabsdeaths*lassorpfl + fedui200mabsdeaths*lassorpfl + fedui300mabsdeaths*lassorpfl + fedui400mabsdeaths*lassorpfl +
+                     feduinoneavcost*lassorpfl + fedui100avcost*lassorpfl + fedui200avcost*lassorpfl + fedui300avcost*lassorpfl + fedui400avcost*lassorpfl +
+                     feduinoneunempl*lassorpfl + fedui100unempl*lassorpfl + fedui200unempl*lassorpfl + fedui300unempl*lassorpfl + fedui400unempl*lassorpfl +
+                     
                      factor(rule1)*lassorpfl + factor(rule2)*lassorpfl +
                      factor(rule3)*lassorpfl + factor(rule4)*lassorpfl +
                      factor(rule5)*lassorpfl + factor(rule6)*lassorpfl +
                      factor(rule7)*lassorpfl + factor(rule8)*lassorpfl +
                      factor(rule9)*lassorpfl + factor(rule10)*lassorpfl +
-                    
-                    statquo*lassorpfl +
-                    strata(choice),data=dat[which(dat$choiceofperson %in% 1:2),]
-                  ,weights=popwt,method="approximate"
+                     
+                     feduinonestatquo*lassorpfl + fedui100statquo*lassorpfl + fedui200statquo*lassorpfl + fedui300statquo*lassorpfl + fedui400statquo*lassorpfl +
+                     
+                     strata(choice),data=dat[which(dat$choiceofperson %in% 1:2),]
+                   ,weights=popwt,method="approximate"
   )
   
 }
@@ -559,7 +598,7 @@ fixnames2 <- function (x) {
                   "unempl",
                   "feduinoneunempl", "feduianyunempl", "fedui100unempl", "fedui200unempl", "fedui300unempl", "fedui400unempl",
                   
-  
+                  
                   "statquo" )
   
   var.omit <- c("lassorpfl","^feduiany$","^factor\\(fedui\\)100$","^factor\\(fedui\\)200$",
@@ -610,11 +649,11 @@ fixnames2 <- function (x) {
                   "Restrictions (indicators) & & & & $\\\\checkmark$ & $\\\\checkmark$ & $\\\\checkmark$ \\\\\\\\ \n",
                   "All response propensity interactions & $\\\\checkmark$ & $\\\\checkmark$ & $\\\\checkmark$ & $\\\\checkmark$ & $\\\\checkmark$ & $\\\\checkmark$ \\\\\\\\ \n",
                   "\\\\hline \\\\\\\\[-1.8ex]")
-
-
-# log lik
-
-
+  
+  
+  # log lik
+  
+  
   logliks <- paste0("\nLog likelihood & ",
                     round(main1$loglik[2],2)," & ",
                     round(main2$loglik[2],2)," & ",
@@ -623,15 +662,15 @@ fixnames2 <- function (x) {
                     round(main2b$loglik[2],2)," & ",
                     round(main3b$loglik[2],2)," \\\\\\\\ ",
                     "\n")
-
-# info criteria
-
-AICs <- paste0("AIC & ",round(AIC(main1),2)," & ", round(AIC(main2),2)," & ", round(AIC(main3),2)," & ",
-    round(AIC(main1b),2)," & ",round(AIC(main2b),2)," & ",round(AIC(main3b),2)," \\\\\\\\ \n")
-
-BICs <- paste0("BIC & ",round(BIC(main1),2)," & ", round(BIC(main2),2)," & ", round(BIC(main3),2)," & ",
-    round(BIC(main1b),2)," & ",round(BIC(main2b),2)," & ",round(BIC(main3b),2)," \\\\\\\\ \n")
-
+  
+  # info criteria
+  
+  AICs <- paste0("AIC & ",round(AIC(main1),2)," & ", round(AIC(main2),2)," & ", round(AIC(main3),2)," & ",
+                 round(AIC(main1b),2)," & ",round(AIC(main2b),2)," & ",round(AIC(main3b),2)," \\\\\\\\ \n")
+  
+  BICs <- paste0("BIC & ",round(BIC(main1),2)," & ", round(BIC(main2),2)," & ", round(BIC(main3),2)," & ",
+                 round(BIC(main1b),2)," & ",round(BIC(main2b),2)," & ",round(BIC(main3b),2)," \\\\\\\\ \n")
+  
 }
 
 maintabs <- stargazer(main1,main2,main3,main1b,main2b,main3b,
@@ -647,7 +686,7 @@ maintable <- fixnames2(maintabs) %>% str_replace("centering", "centering \n \\\\
   str_replace("Observations.{0,1000}\\\\\\\\",paste0(restr,ns,logliks,AICs,BICs))
 
 cat(maintable)
-write(maintable,file="~/covid-survey/tables/maintable_993_norestr.tex")
+#write(maintable,file="~/covid-survey/tables/maintable_993_norestr.tex")
 
 
 # use robust SEs BIG TABLE (APPENDIX)
@@ -668,7 +707,7 @@ write(maintable,file="~/covid-survey/tables/maintable_993_norestr.tex")
     dplyr::select(`robust se`) %>% unlist() %>% as.numeric()
   
   se3b <- summary(main3b)$coefficients %>% as.data.frame() %>% rownames_to_column(var="term") %>% 
-     dplyr::select(`robust se`) %>% unlist() %>% as.numeric()
+    dplyr::select(`robust se`) %>% unlist() %>% as.numeric()
   
   selist <- list(se1,se2,se3,se1b,se2b,se3b)
   
@@ -677,15 +716,15 @@ write(maintable,file="~/covid-survey/tables/maintable_993_norestr.tex")
 
 
 maintabs2 <- stargazer(main1,main2,main3,main1b,main2b,main3b,
-                      type="latex",
-                      title="Effects of Federal UI",
-                      omit="^lassorpfl$",
-                     
-                      order=paste0("^", vars.order , "$"),
-                      se=selist,
-                      keep.stat="n",
-                      digits.extra = 10,
-                      no.space = T)
+                       type="latex",
+                       title="Effects of Federal UI",
+                       omit="^lassorpfl$",
+                       
+                       order=paste0("^", vars.order , "$"),
+                       se=selist,
+                       keep.stat="n",
+                       digits.extra = 10,
+                       no.space = T)
 maintable2 <- fixnames2(maintabs2) %>% str_replace("centering", "centering \n \\\\scriptsize") %>% 
   str_replace("Observations.{0,1000}\\\\\\\\",paste0(restr,ns,logliks)) %>% 
   str_replace_all("lassorpfl:","RP $\\\\times$ ") %>% str_replace_all("lassorpfl ","RP ")
@@ -699,37 +738,37 @@ write(maintable2,file="~/covid-survey/tables/maintable_993_APPENDIX.tex")
 ###########################################################
 
 {
-
+  
   mainwithoutrp <- clogit(best ~
-                         mabsdeaths + mabscases +
-                         feduinoneavcost + feduianyavcost +
-                         feduinoneunempl + feduianyunempl +
-                         
-                         factor(rule1) + factor(rule2) +
-                         factor(rule3) + factor(rule4) +
-                         factor(rule5) + factor(rule6) +
-                         factor(rule7) + factor(rule8) +
-                         factor(rule9) + factor(rule10) +
-                         
-                         statquo +
-                         strata(choice),data=dat[which(dat$choiceofperson %in% 1:2),]
-                       ,weights=popwt,method="approximate"
+                            mabsdeaths + mabscases +
+                            feduinoneavcost + feduianyavcost +
+                            feduinoneunempl + feduianyunempl +
+                            
+                            factor(rule1) + factor(rule2) +
+                            factor(rule3) + factor(rule4) +
+                            factor(rule5) + factor(rule6) +
+                            factor(rule7) + factor(rule8) +
+                            factor(rule9) + factor(rule10) +
+                            
+                            statquo +
+                            strata(choice),data=dat[which(dat$choiceofperson %in% 1:2),]
+                          ,weights=popwt,method="approximate"
   )
   
   mainwithrp <- clogit(best ~
-                     mabsdeaths*lassorpfl + mabscases*lassorpfl +
-                     feduinoneavcost*lassorpfl + feduianyavcost*lassorpfl +
-                     feduinoneunempl*lassorpfl + feduianyunempl*lassorpfl +
-                     
-                     factor(rule1)*lassorpfl + factor(rule2)*lassorpfl +
-                     factor(rule3)*lassorpfl + factor(rule4)*lassorpfl +
-                     factor(rule5)*lassorpfl + factor(rule6)*lassorpfl +
-                     factor(rule7)*lassorpfl + factor(rule8)*lassorpfl +
-                     factor(rule9)*lassorpfl + factor(rule10)*lassorpfl +
-                     
-                     statquo*lassorpfl +
-                     strata(choice),data=dat[which(dat$choiceofperson %in% 1:2),]
-                   ,weights=popwt,method="approximate"
+                         mabsdeaths*lassorpfl + mabscases*lassorpfl +
+                         feduinoneavcost*lassorpfl + feduianyavcost*lassorpfl +
+                         feduinoneunempl*lassorpfl + feduianyunempl*lassorpfl +
+                         
+                         factor(rule1)*lassorpfl + factor(rule2)*lassorpfl +
+                         factor(rule3)*lassorpfl + factor(rule4)*lassorpfl +
+                         factor(rule5)*lassorpfl + factor(rule6)*lassorpfl +
+                         factor(rule7)*lassorpfl + factor(rule8)*lassorpfl +
+                         factor(rule9)*lassorpfl + factor(rule10)*lassorpfl +
+                         
+                         statquo*lassorpfl +
+                         strata(choice),data=dat[which(dat$choiceofperson %in% 1:2),]
+                       ,weights=popwt,method="approximate"
   )
   
 }
@@ -824,7 +863,7 @@ maketable3 <- function (fac,df,drop=c("MISSING")) {
                  
                  rule2c + rule3c +rule4c +rule5c + 
                  rule6c + rule7c + rule8c + rule9c + rule10c +
-                  statquo + 0,data = df)
+                 statquo + 0,data = df)
     
     vars.order <- c("mabsdeaths",  "mabscases", "feduinoneavcost",  "feduianyavcost",  
                     "feduinoneunempl",  "feduianyunempl", 
@@ -934,23 +973,6 @@ write(hettable2,file="~/covid-survey/tables/hettable2_993_norestr.tex")
   ) %>% summary()
   
   maineducation <- clogit(best ~
-                     mabsdeaths*lassorpfl + mabscases*lassorpfl +
-                     feduinoneavcost*lassorpfl + feduianyavcost*lassorpfl + 
-                     feduinoneunempl*lassorpfl + feduianyunempl*lassorpfl + 
-                     
-                     factor(rule1)*lassorpfl + factor(rule2)*lassorpfl +
-                     factor(rule3)*lassorpfl + factor(rule4)*lassorpfl +
-                     factor(rule5)*lassorpfl + factor(rule6)*lassorpfl +
-                     factor(rule7)*lassorpfl + factor(rule8)*lassorpfl +
-                     factor(rule9)*lassorpfl + factor(rule10)*lassorpfl +
-                     
-                     statquo*lassorpfl +
-                     strata(choice),data=dat[which(dat$education != "MISSING"),]
-                   ,weights=popwt,method="approximate"
-  ) %>% summary()
-  
-  
-  mainincome <- clogit(best ~
                             mabsdeaths*lassorpfl + mabscases*lassorpfl +
                             feduinoneavcost*lassorpfl + feduianyavcost*lassorpfl + 
                             feduinoneunempl*lassorpfl + feduianyunempl*lassorpfl + 
@@ -962,11 +984,12 @@ write(hettable2,file="~/covid-survey/tables/hettable2_993_norestr.tex")
                             factor(rule9)*lassorpfl + factor(rule10)*lassorpfl +
                             
                             statquo*lassorpfl +
-                            strata(choice),data=dat[which(dat$income != "MISSING"),]
+                            strata(choice),data=dat[which(dat$education != "MISSING"),]
                           ,weights=popwt,method="approximate"
   ) %>% summary()
   
-  mainideol <- clogit(best ~
+  
+  mainincome <- clogit(best ~
                          mabsdeaths*lassorpfl + mabscases*lassorpfl +
                          feduinoneavcost*lassorpfl + feduianyavcost*lassorpfl + 
                          feduinoneunempl*lassorpfl + feduianyunempl*lassorpfl + 
@@ -978,8 +1001,24 @@ write(hettable2,file="~/covid-survey/tables/hettable2_993_norestr.tex")
                          factor(rule9)*lassorpfl + factor(rule10)*lassorpfl +
                          
                          statquo*lassorpfl +
-                         strata(choice),data=dat[which(dat$ideol2 != "MISSING"),]
+                         strata(choice),data=dat[which(dat$income != "MISSING"),]
                        ,weights=popwt,method="approximate"
+  ) %>% summary()
+  
+  mainideol <- clogit(best ~
+                        mabsdeaths*lassorpfl + mabscases*lassorpfl +
+                        feduinoneavcost*lassorpfl + feduianyavcost*lassorpfl + 
+                        feduinoneunempl*lassorpfl + feduianyunempl*lassorpfl + 
+                        
+                        factor(rule1)*lassorpfl + factor(rule2)*lassorpfl +
+                        factor(rule3)*lassorpfl + factor(rule4)*lassorpfl +
+                        factor(rule5)*lassorpfl + factor(rule6)*lassorpfl +
+                        factor(rule7)*lassorpfl + factor(rule8)*lassorpfl +
+                        factor(rule9)*lassorpfl + factor(rule10)*lassorpfl +
+                        
+                        statquo*lassorpfl +
+                        strata(choice),data=dat[which(dat$ideol2 != "MISSING"),]
+                      ,weights=popwt,method="approximate"
   ) %>% summary()
   
   
@@ -1031,8 +1070,8 @@ lrt(summary(main3),summary(main3b))
 
 
 summary(clogit(best ~ mabsdeaths*lassorpfl + mabscases*lassorpfl +
-                  feduiany*avcost*lassorpfl + 
-                  feduiany*unempl*lassorpfl + 
+                 feduiany*avcost*lassorpfl + 
+                 feduiany*unempl*lassorpfl + 
                  
                  factor(rule1)*lassorpfl + factor(rule2)*lassorpfl +
                  factor(rule3)*lassorpfl + factor(rule4)*lassorpfl +
@@ -1095,7 +1134,7 @@ maketable3 <- function (fac,df,drop=c("MISSING")) {
     
     
     t <- s$coefficients %>% as.data.frame() %>% rownames_to_column(var="term")  
-     # dplyr::filter(! str_detect(term,"lassorpfl"))
+    # dplyr::filter(! str_detect(term,"lassorpfl"))
     
     
     
@@ -1160,7 +1199,7 @@ maketable3 <- function (fac,df,drop=c("MISSING")) {
   
   
   b <- stargazer(mods,type="latex",
-                # omit="rule",
+                 # omit="rule",
                  coef = coeflist,
                  # standard errors
                  se = selist,
@@ -1239,7 +1278,7 @@ main3b <- clogit(best ~
                    feduinoneavcost*lassorpfl + feduianyavcost*lassorpfl + 
                    feduinoneunempl*lassorpfl + feduianyunempl*lassorpfl + 
                    
-                  
+                   
                    
                    factor(rule1)*lassorpfl + factor(rule2)*lassorpfl +
                    factor(rule3)*lassorpfl + factor(rule4)*lassorpfl +
@@ -1247,7 +1286,7 @@ main3b <- clogit(best ~
                    factor(rule7)*lassorpfl + factor(rule8)*lassorpfl +
                    factor(rule9)*lassorpfl + factor(rule10)*lassorpfl +
                    
-                  rulesd*statquo*lassorpfl +
+                   rulesd*statquo*lassorpfl +
                    strata(choice),data=dat[which(dat$choiceofperson %in% 1:2),]
                  ,weights=popwt,method="approximate"
 )
@@ -1258,58 +1297,9 @@ summary(main3b)
 ###################### Cluster by person ########################
 
 main3cluster <- clogit(best ~
-                  mabsdeaths*lassorpfl + mabscases*lassorpfl +
-                  feduinoneavcost*lassorpfl + feduianyavcost*lassorpfl + 
-                  feduinoneunempl*lassorpfl + feduianyunempl*lassorpfl + 
-                  
-                  rule1*lassorpfl + rule2*lassorpfl +
-                  rule3*lassorpfl + rule4*lassorpfl +
-                  rule5*lassorpfl + rule6*lassorpfl +
-                  rule7*lassorpfl + rule8*lassorpfl +
-                  rule9*lassorpfl + rule10*lassorpfl +
-                  
-                  statquo*lassorpfl +
-                  strata(choice),data=dat[which(dat$choiceofperson %in% 1:2),]
-                ,weights=popwt,method="approximate",
-                cluster=ResponseId
-)
-
-
-main6cluster <- clogit(best ~
-                   mabsdeaths*lassorpfl + mabscases*lassorpfl +
-                   feduinoneavcost*lassorpfl + feduianyavcost*lassorpfl + 
-                   feduinoneunempl*lassorpfl + feduianyunempl*lassorpfl + 
-                   
-                   factor(rule1)*lassorpfl + factor(rule2)*lassorpfl +
-                   factor(rule3)*lassorpfl + factor(rule4)*lassorpfl +
-                   factor(rule5)*lassorpfl + factor(rule6)*lassorpfl +
-                   factor(rule7)*lassorpfl + factor(rule8)*lassorpfl +
-                   factor(rule9)*lassorpfl + factor(rule10)*lassorpfl +
-                   
-                   statquo*lassorpfl +
-                   strata(choice),data=dat[which(dat$choiceofperson %in% 1:2),]
-                 ,weights=popwt,method="approximate",
-                 cluster=ResponseId
-)
-
-varskeep <- c("^mabsdeaths$","^mabscases$","^feduinoneavcost$","^feduianyavcost$","^feduinoneunempl$","^feduianyunempl$","^statquo$")
-
-t3 <- broom::tidy(main3cluster)
-t6 <- broom::tidy(main6cluster)
-
-model.se <- list(t3$robust.se,t6$robust.se)
-
-a <- stargazer(main3cluster,main6cluster,
-          keep=varskeep,
-          se=model.se)
-a %>% fixnames2 %>% cat()
-
-##### base + shifters ####
-
-main3cluster2 <- clogit(best ~
                          mabsdeaths*lassorpfl + mabscases*lassorpfl +
-                          avcost*lassorpfl + avcost:feduiany*lassorpfl + 
-                          unempl*lassorpfl + unempl:feduiany*lassorpfl + 
+                         feduinoneavcost*lassorpfl + feduianyavcost*lassorpfl + 
+                         feduinoneunempl*lassorpfl + feduianyunempl*lassorpfl + 
                          
                          rule1*lassorpfl + rule2*lassorpfl +
                          rule3*lassorpfl + rule4*lassorpfl +
@@ -1324,10 +1314,10 @@ main3cluster2 <- clogit(best ~
 )
 
 
-main6cluster2 <- clogit(best ~
+main6cluster <- clogit(best ~
                          mabsdeaths*lassorpfl + mabscases*lassorpfl +
-                          avcost*lassorpfl + avcost:feduiany*lassorpfl + 
-                          unempl*lassorpfl + unempl:feduiany*lassorpfl + 
+                         feduinoneavcost*lassorpfl + feduianyavcost*lassorpfl + 
+                         feduinoneunempl*lassorpfl + feduianyunempl*lassorpfl + 
                          
                          factor(rule1)*lassorpfl + factor(rule2)*lassorpfl +
                          factor(rule3)*lassorpfl + factor(rule4)*lassorpfl +
@@ -1341,6 +1331,55 @@ main6cluster2 <- clogit(best ~
                        cluster=ResponseId
 )
 
+varskeep <- c("^mabsdeaths$","^mabscases$","^feduinoneavcost$","^feduianyavcost$","^feduinoneunempl$","^feduianyunempl$","^statquo$")
+
+t3 <- broom::tidy(main3cluster)
+t6 <- broom::tidy(main6cluster)
+
+model.se <- list(t3$robust.se,t6$robust.se)
+
+a <- stargazer(main3cluster,main6cluster,
+               keep=varskeep,
+               se=model.se)
+a %>% fixnames2 %>% cat()
+
+##### base + shifters ####
+
+main3cluster2 <- clogit(best ~
+                          mabsdeaths*lassorpfl + mabscases*lassorpfl +
+                          avcost*lassorpfl + avcost:feduiany*lassorpfl + 
+                          unempl*lassorpfl + unempl:feduiany*lassorpfl + 
+                          
+                          rule1*lassorpfl + rule2*lassorpfl +
+                          rule3*lassorpfl + rule4*lassorpfl +
+                          rule5*lassorpfl + rule6*lassorpfl +
+                          rule7*lassorpfl + rule8*lassorpfl +
+                          rule9*lassorpfl + rule10*lassorpfl +
+                          
+                          statquo*lassorpfl +
+                          strata(choice),data=dat[which(dat$choiceofperson %in% 1:2),]
+                        ,weights=popwt,method="approximate",
+                        cluster=ResponseId
+)
+
+
+main6cluster2 <- clogit(best ~
+                          mabsdeaths*lassorpfl + mabscases*lassorpfl +
+                          avcost*lassorpfl + avcost:feduiany*lassorpfl + 
+                          unempl*lassorpfl + unempl:feduiany*lassorpfl + 
+                          
+                          factor(rule1)*lassorpfl + factor(rule2)*lassorpfl +
+                          factor(rule3)*lassorpfl + factor(rule4)*lassorpfl +
+                          factor(rule5)*lassorpfl + factor(rule6)*lassorpfl +
+                          factor(rule7)*lassorpfl + factor(rule8)*lassorpfl +
+                          factor(rule9)*lassorpfl + factor(rule10)*lassorpfl +
+                          
+                          statquo*lassorpfl +
+                          strata(choice),data=dat[which(dat$choiceofperson %in% 1:2),]
+                        ,weights=popwt,method="approximate",
+                        cluster=ResponseId
+)
+
 varskeep2 <- c("^mabsdeaths$","^mabscases$","^avcost$","^avcost:feduiany$","^unempl$","^unempl:feduiany$","^statquo$")
 
 t3b <- broom::tidy(main3cluster2)
@@ -1352,3 +1391,47 @@ a <- stargazer(main3cluster2,main6cluster2,
                keep=varskeep2,
                se=model.se2)
 a %>% fixnames2 %>% cat()
+
+
+
+
+
+
+
+main3b <- clogit(best ~
+                   feduiany*mabscases*lassorpfl + 
+                   feduinonemabsdeaths*lassorpfl + feduianymabsdeaths*lassorpfl +
+                   feduinoneavcost*lassorpfl + feduianyavcost*lassorpfl + 
+                   feduinoneunempl*lassorpfl + feduianyunempl*lassorpfl + 
+                   
+                   factor(rule1)*lassorpfl + factor(rule2)*lassorpfl +
+                   factor(rule3)*lassorpfl + factor(rule4)*lassorpfl +
+                   factor(rule5)*lassorpfl + factor(rule6)*lassorpfl +
+                   factor(rule7)*lassorpfl + factor(rule8)*lassorpfl +
+                   factor(rule9)*lassorpfl + factor(rule10)*lassorpfl +
+                   
+                   feduinonestatquo*lassorpfl +
+                   feduianystatquo*lassorpfl +
+                   strata(choice),data=dat[which(dat$choiceofperson %in% 1:2),]
+                 ,weights=popwt,method="approximate"
+)
+summary(main3b)
+main3 <- clogit(best ~
+                  feduiany*mabscases*lassorpfl + 
+                  feduinonemabsdeaths*lassorpfl + feduianymabsdeaths*lassorpfl +
+                  
+                  feduinoneavcost*lassorpfl + feduianyavcost*lassorpfl + 
+                  feduinoneunempl*lassorpfl + feduianyunempl*lassorpfl + 
+                  
+                  rule1*lassorpfl + rule2*lassorpfl +
+                  rule3*lassorpfl + rule4*lassorpfl +
+                  rule5*lassorpfl + rule6*lassorpfl +
+                  rule7*lassorpfl + rule8*lassorpfl +
+                  rule9*lassorpfl + rule10*lassorpfl +
+                  
+                  feduinonestatquo*lassorpfl +
+                  feduianystatquo*lassorpfl +
+                  strata(choice),data=dat[which(dat$choiceofperson %in% 1:2),]
+                ,weights=popwt,method="approximate"
+)
+summary(main3)
