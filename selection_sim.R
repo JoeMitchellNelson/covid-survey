@@ -1,5 +1,5 @@
 require(pacman)
-p_load(MASS,evd,tidyverse,survival)
+p_load(MASS,evd,tidyverse,survival,sampleSelection)
 
 
 set.seed(301541)
@@ -10,8 +10,8 @@ m = 5000
 # 2 utility functions
 u1 <- function (type,a,c,e1,statquo) {
   ifelse(type=="I",
-         1*a - 1*c + e1 + 0*statquo, # utility function for type I agents
-         1*a - 2.5*c + e1 + 0*statquo) # utility function for type II agents
+         1*a - 1*c + e1 - 1*statquo, # utility function for type I agents
+         1*a - 1*c + e1 - 1*statquo) # utility function for type II agents
 }
 
 
@@ -46,7 +46,7 @@ for (i in 1:m) {
   
   
   # RP correlated with type?
-  sim$z <- ifelse(sim$type=="I",sim$z+0.5,sim$z-0.5)
+  sim$z <- ifelse(sim$type=="I",sim$z+1,sim$z-1)
   
   # probability of response
   sim$rp <- pnorm(sim$z + sim$e2)
@@ -81,6 +81,7 @@ for (i in 1:m) {
   dat$everyone[i] <- t1
   dat$respondersonly[i] <- t2
   dat$fixed[i] <- t3
+  dat$proptype1[i] <- sum(sim$respond=="1" & sim$type=="I")/sum(sim$respond)
 
   
 }
@@ -116,3 +117,45 @@ sd(dat$uncorrected,na.rm=T)/sqrt(m)
 1 - abs(mean(dat$corrected,na.rm=T)/mean(dat$uncorrected,na.rm=T))
 
 sum(abs(dat$corrected)<abs(dat$uncorrected),na.rm=T)/m
+
+
+########## reconfigure for probit ###############
+
+n = 10000000
+
+sim2 <- data.frame(type=rep(c("I","II"),n),
+                   a = rnorm(n,5,1),
+                   c = rnorm(n,5,1),
+                   e1= rnorm(n,0,1),
+                   e2= rnorm(n,0,1),
+                   z = rnorm(n,0,1),
+                   statquo = -1)
+
+sim2 <- sim2 %>% mutate(u = u1(type,a,c,e1,statquo))
+sim2$best <- ifelse(sim2$u > 0,1,0)
+sim2$z <- ifelse(sim2$type == "I",sim2$z+1,sim2$z-1)
+sim2$rp <- pnorm(sim2$z + sim2$e2)
+sim2$respond <- rbinom(nrow(sim2),1,sim2$rp)
+head(sim2)
+summary(sim2)
+
+fix <- glm(respond ~ z, family = binomial(link = "probit"), 
+    data = sim2)
+sim2$fitted <- predict(fix)
+sim2$fitted <- sim2$fitted - mean(sim2$fitted)
+
+ggplot(sim2) +
+  geom_density(aes(x=fitted,group=type,color=type))
+
+summary(p1 <- glm(best ~ a + c + statquo + 0,family = binomial(link = "probit"), 
+            data = sim2))
+
+summary(p2 <- glm(best ~ a + c + statquo + 0,family = binomial(link = "probit"), 
+            data = sim2[which(sim2$respond==1),]))
+
+summary(p3 <- glm(best ~ a:fitted + c:fitted + statquo:fitted + a + c + statquo + 0,family = binomial(link = "probit"), 
+            data = sim2[which(sim2$respond==1),]))
+
+-1 * p1$coefficients[["a"]]/p1$coefficients[["c"]]
+-1 * p2$coefficients[["a"]]/p2$coefficients[["c"]]
+-1 * p3$coefficients[["a"]]/p3$coefficients[["c"]]

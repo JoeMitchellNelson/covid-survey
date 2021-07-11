@@ -1,10 +1,14 @@
 require(pacman)
-p_load(tidyverse,ggplot2,lubridate)
+p_load(tidyverse,ggplot2,lubridate,extrafont)
 
+font_import()
+font_import(pattern="cmu")
+loadfonts(device = "win")
 #start 600 (PUC): April 5, 2020
 #end 600 (PUC): July 31, 2020
 #start 300 (Consolidated appropriations act: Dec 26, 2020
 #scheduled end 300 (Consolidated appropriations act): March 14, 2021
+
 
 int600 <- interval(ymd("2020-4-5"),ymd("2020-7-31"))
 int300 <- interval(ymd("2020-12-26"),ymd("2021-3-14"))
@@ -31,14 +35,17 @@ tl1 <- ggplot(bene) +
  # annotate(x=ymd("2020-11-1"),y=250,label="Survey\nresponses\nreceived",geom="text",color="blue",alpha=0.8) +
 #  geom_segment(x=ymd("2020-11-10"),xend=ymd("2021-1-19"),y=170,yend=100,color="blue",alpha=0.8) +
   
-  annotate(x=ymd("2021-5-1"),y=345,label="Scheduled\nbenefits cliff\n(March 14)",geom="text",alpha=0.8) +
+  annotate(x=ymd("2021-5-1"),y=345,label="Scheduled\nbenefits cliff\n(March 14)",geom="text",alpha=0.8,family = "Times New Roman") +
   geom_segment(x=ymd("2021-5-1"),xend=ymd("2021-3-14"),y=260,yend=200,alpha=0.8) +
   lims(x=c(ymd("2020-3-20"), ymd("2021-6-1"))) +
   scale_y_continuous(labels=scales::dollar_format()) +
   theme_minimal() +
-  theme(axis.title.y = element_text(angle = 0,vjust=0.5),
+  theme( text = element_text(family = "Times New Roman"),
+         axis.title.y = element_text(angle = 0,vjust=0.5),
         panel.background = element_rect(fill="#FAFAFA",color="#FAFAFA"),
         plot.background = element_rect(fill="#FAFAFA",color="#FAFAFA"))
+
+tl1
 
 tl2 <- ggplot(bene) +
   lims(x=c(ymd("2020-3-20"), ymd("2021-6-1")),y=c(-140,0)) +

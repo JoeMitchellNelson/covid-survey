@@ -9,9 +9,9 @@ p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
 #################### READ IN DATA ################
 {
   
-  newdemean <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID-shared/intermediate-files/demeanrp-lasso.csv")[,-1]
-  cmatch <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID-shared/intermediate-files/countymatch.csv")[,-1]
-  dat <- read.csv("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.csv") %>% 
+  newdemean <- read.csv("C:/Users/joe/Dropbox (University of Oregon)/VSL-COVID-shared/intermediate-files/demeanrp-lasso.csv")[,-1]
+  cmatch <- read.csv("C:/Users/joe/Dropbox (University of Oregon)/VSL-COVID-shared/intermediate-files/countymatch.csv")[,-1]
+  dat <- read.csv("C:/Users/joe/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.csv") %>% 
     # dplyr::filter(rejectonly==0) %>% 
     dplyr::filter(Durationinseconds > 360) %>% 
     dplyr::filter(choiceofperson %in% 1:2) %>% 
@@ -24,7 +24,7 @@ p_load(rpart,rpart.plot,readr,dplyr,RCurl,rjson,lubridate,
   dat$owninc <- ifelse(dat$owninc==0,NA,dat$owninc)
   
   
-  dat2 <- read.dta13("C:/Users/joem/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.dta")
+  dat2 <- read.dta13("C:/Users/joe/Dropbox (University of Oregon)/VSL-COVID/intermediate-files/main_vars_nointx.dta")
   
   ethnic <- read.csv("~/covid-survey/data/countyethfrac.csv")[,-1]
   
@@ -212,17 +212,17 @@ getsummary <- function (fac,df) {
   }
   
   
-  bv <- c("mabsdeaths","mabscases",
-          "feduianyavcost","feduinoneavcost",
-          "feduianyunempl","feduinoneunempl",
+  bv <- c("feduinonemabscases","feduianymabscases", 
+          "feduinonemabsdeaths","feduianymabsdeaths", 
+          "feduinoneavcost", "feduianyavcost",
+          "feduinoneunempl", "feduianyunempl",
+          "feduinonestatquo","feduianystatquo", 
           "rule1.1",           "rule1.2",          
           "rule2.1",           "rule2.2",           "rule2.3",              "rule3.1",           "rule3.2",          
           "rule3.3",            "rule4.1",           "rule4.2",           "rule4.3",               "rule5.1",          
           "rule5.2",           "rule5.3",              "rule6.1",           "rule6.2",           "rule6.3",           
           "rule7.1" ,          "rule7.2",           "rule7.3",              "rule8.1",           "rule8.2" ,      "rule8.3",          
-          "rule9.1",           "rule9.2",           "rule9.3",             "rule10.1" ,         "rule10.2",         
-          "rule10.3",         
-          "statquo")
+          "rule9.1",           "rule9.2",           "rule9.3",             "rule10.1" ,         "rule10.2",       "rule10.3")
   
   newdf <- df %>% dplyr::select("best","choice",all_of(bv),all_of(fac),"popwt","popwt2","lassorpfl")
   
@@ -247,6 +247,8 @@ getsummary <- function (fac,df) {
   summary(clogit(form3,data=newdf,weights=popwt,method="approximate"))
 }
 
+
+getsummary("ideol2",dat)
 
 maketable <- function (fac,df,drop=c("MISSING")) {
   
@@ -301,12 +303,17 @@ maketable <- function (fac,df,drop=c("MISSING")) {
   }
   
   
-  fake <- lm(best ~ mabsdeaths + mabscases + feduianyavcost + feduinoneavcost + feduianyunempl + feduinoneunempl +
-               statquo + 0,data = df)
+  fake <- lm(best ~ feduinonemabscases + feduianymabscases + 
+               feduinonemabsdeaths + feduianymabsdeaths + 
+               feduinoneavcost +  feduianyavcost + 
+               feduinoneunempl + feduianyunempl +
+               feduinonestatquo + feduianystatquo + 0,data = df)
   
-  vars.order <- c("mabsdeaths",  "mabscases", "feduinoneavcost",  "feduianyavcost",  
+  vars.order <- c("feduinonemabscases",  "feduianymabscases",
+                  "feduinonemabsdeaths", "feduianymabsdeaths",
+                  "feduinoneavcost",  "feduianyavcost",  
                   "feduinoneunempl",  "feduianyunempl",  
-                  "statquo" )
+                  "feduinonestatquo","feduianystatquo" )
   
   
   mods <- list()
@@ -337,22 +344,25 @@ maketable <- function (fac,df,drop=c("MISSING")) {
 }
 
 
+maketable("ideol2",dat,drop="MISSING") %>% cat()
+
 fixnames <- function (x) {
   
   x <- paste(x,collapse="\n")
   
   
-  for (i in nrow(varlabs):1) {
-    if(str_detect(x,paste0("",varlabs$variable[i]))) {
-      x <- str_replace_all(x,varlabs$variable[i],varlabs$label[i])
-    }
-  }
-  
-  x <- str_replace_all(x," numberernative","")
-  x <- str_replace_all(x," w/ any attrib.","")
+  x <- str_replace_all(x,"feduinonemabscases","Cases, 100s per 50K (federal UI = 0)")
+  x <- str_replace_all(x,"feduianymabscases","Cases, 100s per 50K (federal UI > 0)")
+  x <- str_replace_all(x,"feduinonemabsdeaths","Deaths per 50K (federal UI = 0)")
+  x <- str_replace_all(x,"feduianymabsdeaths","Deaths per 50K (federal UI > 0)")
+  x <- str_replace_all(x,"feduinoneavcost","Avg. hhld cost (federal UI = 0)")
+  x <- str_replace_all(x,"feduianyavcost","Avg. hhld cost (federal UI > 0)")
+  x <- str_replace_all(x,"feduinoneunempl","Unempl rate (federal UI = 0)")
+  x <- str_replace_all(x,"feduianyunempl","Unempl rate (federal UI > 0)")
+  x <- str_replace_all(x,"feduinonestatquo","1 = Status quo alternative (federal UI = 0)")
+  x <- str_replace_all(x,"feduianystatquo","1 = Status quo alternative (federal UI > 0)")
   x <- str_replace_all(x,"1=Non-zero federal UI policy","$\\\\quad \\\\times$ 1=Non-zero federal UI")
-  x <- str_remove_all(x,":Unempl rate for county")
-  x <- str_remove_all(x,"Avg. hhld cost for county:")
+
   # x <- str_replace_all(x," & & \\\\\\\\"," & & \\\\\\\\[-1.2ex]")
   # x <- str_replace_all(x,"\\[-1.8ex]","\\\\")
   
@@ -367,16 +377,16 @@ ideoltable <- maketable(fac="ideol2",
   str_replace_all("Ideol2","Ideology")
 ideoltable %>% cat()
 
-write(ideoltable,file="~/covid-survey/tables/ideologytable_newint.tex")
+write(ideoltable,file="~/covid-survey/tables/ideologytable_casesdeaths.tex")
 
 gendertable <- maketable(fac="gender", 
                          df=dat[which(dat$choiceofperson %in% 1:2 & !dat$gender %in% c("MISSING","NonBinary")),], 
-                         drop=c("MISSING","NonBinary")) %>% 
-  fixnames() 
+                         drop=c("MISSING","NonBinary")) %>% fixnames()
+
 
 cat(gendertable)
 
-write(gendertable,file="~/covid-survey/tables/gendertable_newint.tex")
+write(gendertable,file="~/covid-survey/tables/gendertable_casesdeaths.tex")
 
 
 agetable <- maketable(fac="age", 
@@ -389,7 +399,7 @@ agetable <- maketable(fac="age",
 
 cat(agetable)
 
-write(agetable,file="~/covid-survey/tables/agetable_newint.tex")
+write(agetable,file="~/covid-survey/tables/agetable_casesdeaths.tex")
 
 
 racetable <- maketable(fac="race", 
@@ -397,24 +407,26 @@ racetable <- maketable(fac="race",
                        drop=NA) %>% 
   fixnames() %>% 
   str_replace_all("Other","Non-white")
-write(racetable,file="~/covid-survey/tables/racetable_newint.tex")
+cat(racetable)
+
+write(racetable,file="~/covid-survey/tables/racetable_casesdeaths.tex")
 
 eductable <- maketable(fac="education", 
                        df=dat[which(dat$choiceofperson %in% 1:2 & dat$education != "MISSING"),], 
-                       drop="MISSING") %>% 
-  fixnames() 
+                       drop="MISSING") %>% fixnames()
 
-write(eductable,file="~/covid-survey/tables/educationtable_newint.tex")
+cat(eductable)
+
+write(eductable,file="~/covid-survey/tables/educationtable_casesdeaths.tex")
 
 
 incometable <- maketable(fac="income", 
                          df=dat[which(dat$choiceofperson %in% 1:2),], 
-                         drop=NA) %>% 
-  fixnames()
+                         drop=NA) %>% fixnames()
 
 
 cat(incometable)
-write(incometable,file="~/covid-survey/tables/incometable_newint.tex")
+write(incometable,file="~/covid-survey/tables/incometable_casesdeaths.tex")
 
 
 income2table <- maketable(fac="income2", 
